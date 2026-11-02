@@ -161,6 +161,9 @@ Merge puts a feature on the dev stand; it is accepted there, and production gets
   steal updates from each other.
 - On start the plugin kills the previous poller with the same state directory (`bot.pid`): a second
   session with `--channels` and the same `TELEGRAM_STATE_DIR` silently evicts the On-call agent.
+- A plugin enabled user-wide starts in every session and, without a token, fails; Claude Code then skips it
+  machine-wide for ~15 minutes, so an On-call started in that window has no channel and nobody notices. Keep the
+  plugin disabled user-wide — the On-call enables it for itself in `--settings`.
 - The Bot API has no group history: Telegram keeps undelivered updates for no more than a day.
   If the On-call agent was down longer — ask in the group whether anyone wrote.
 - There is no chat log: the group context lives only in the On-call transcript and is lost after

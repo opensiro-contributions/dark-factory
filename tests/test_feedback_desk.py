@@ -110,6 +110,11 @@ class RulesTest(DeskCase):
         self.assertIn("DF_UNATTENDED=1 DF_ROLE=on-call", text)  # the env prefix
         self.assertIn('\\"DF_ROLE\\":\\"on-call\\"', text)  # --settings env
 
+    def test_session_enables_the_channel_plugin_for_itself(self) -> None:
+        # The plugin stays off user-wide (MANIFEST): only the On-call turns it on, in its --settings layer.
+        text = (TEMPLATE / "scripts/feedback-desk.sh").read_text()
+        self.assertIn('\\"enabledPlugins\\":{\\"$DESK_PLUGIN\\":true}', text)
+
 
 class AcceptTest(DeskCase):
     def test_anyone_on_the_list_accepts_any_merged_pr(self) -> None:
