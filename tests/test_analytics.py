@@ -738,6 +738,12 @@ class RenderTest(TempDirTest):
         self.assertNotIn("dark-factory", terms)
         self.assertNotIn("main", terms)
 
+    def test_leak_terms_skip_the_canons_own_branches(self):
+        terms = render.leak_terms([], [week_data(repos=("acme/dark-factory",))], store.Settings(),
+                                  canon_repo="acme/dark-factory")
+        self.assertNotIn("shop-cart", terms)
+        self.assertNotIn("dark-factory", terms)
+
 
 class ReportTest(TempDirTest):
     def test_report_prints_and_writes_nothing(self):
