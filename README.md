@@ -8,7 +8,7 @@ inside the rules (no push to `main`, merges only on green CI, releases only of a
 subscription limit cuts it off) and, when you want more, carry a change from request to production while you decide
 only what to build and whether the result is accepted.
 
-> **Status:** [v16](https://github.com/ruslantrachuk/dark-factory/releases), experimental. **For** a solo developer or a
+> **Status:** [v17](https://github.com/ruslantrachuk/dark-factory/releases), experimental. **For** a solo developer or a
 > small studio owner on Claude Code and GitHub. **Try it:** [three commands](#install), nothing committed for you. The seatbelt (guard + quota guard) and the
 > merge script are the mature parts; most other modules run in one or two projects, and the team level is the least
 > exercised.

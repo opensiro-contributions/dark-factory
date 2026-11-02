@@ -1,7 +1,7 @@
 {
   "name": "dark-factory",
   "displayName": "Guarded Dark Factory",
-  "version": "16.0.0",
+  "version": "17.0.0",
   "description": "Start with guardrails, grow into a dark factory: Claude Code agents on GitHub, for a solo developer or a small studio. A ladder of five levels, climbed one at a time; /dark-factory:level shows where a project stands. Level 0 (/dark-factory:init): hooks that hold the rules instead of CLAUDE.md requests — no force push, no push to main, no hook bypass, merges only on green CI, a quota guard that saves work before the limit. 1: specs, a task queue, review roles, releases only of accepted work. 2: a server where sessions survive reboots and run unattended. 3: an On-call agent in the client's chat and a production monitor. 4: a team, with an approval on every merge. Silent until a project opts in. Requires python3 3.11+ and git; gh and jq for merges.",
   "author": {
     "name": "Ruslan Trachuk",

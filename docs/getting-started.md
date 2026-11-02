@@ -88,7 +88,7 @@ not for the server.
 ## Steps
 
 1. **Install the plugin** (the two `/plugin` commands above). After `init` or `add base` (step 2), the project's
-   `.claude/settings.json` pins the plugin to a release (`"ref": "v16"`); raising the pin is how a project takes a new
+   `.claude/settings.json` pins the plugin to a release (`"ref": "v17"`); raising the pin is how a project takes a new
    release. With more than one project, create a private repository of your own and run
    `/dark-factory:add factory` in it: [your own factory](your-factory.md).
 2. **Set up a project.** Open Claude Code in the project and run `/dark-factory:add base`. It shows a dry run of
