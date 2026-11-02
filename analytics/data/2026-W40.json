@@ -1,0 +1,1284 @@
+{
+ "collected_at": "2026-10-26T21:15:29Z",
+ "factory": {
+  "releases": {
+   "v1": "2026-10-22",
+   "v10": "2026-10-26",
+   "v11": "2026-10-26",
+   "v2": "2026-10-22",
+   "v3": "2026-10-22",
+   "v4": "2026-10-23",
+   "v5": "2026-10-23",
+   "v6": "2026-10-23",
+   "v7": "2026-10-23",
+   "v8": "2026-10-23",
+   "v9": "2026-10-23"
+  },
+  "server": {
+   "analytics": "2026-10-26",
+   "fleet_watch": "2026-10-26",
+   "janitor": "2026-10-26"
+  }
+ },
+ "final": true,
+ "projects": {
+  "A": {
+   "ci": {
+    "minutes": 3.3,
+    "runs": 21
+   },
+   "delivery": {
+    "lines": {
+     "backend": 3364,
+     "frontend": 1620,
+     "other": 22475,
+     "tests": 2367
+    },
+    "merged": 6
+   },
+   "first_week": "2026-W39",
+   "friction": {
+    "interrupts": 4,
+    "prompts": 118,
+    "rejected": 2,
+    "swear": 0
+   },
+   "involvement": {
+    "lengths": [
+     1,
+     1,
+     2,
+     2,
+     2,
+     2,
+     2,
+     3,
+     5,
+     6,
+     6,
+     6,
+     6,
+     6,
+     7,
+     7,
+     7,
+     8,
+     9,
+     9,
+     11,
+     12,
+     13,
+     13,
+     14,
+     14,
+     14,
+     15,
+     15,
+     15,
+     15,
+     16,
+     18,
+     18,
+     21,
+     21,
+     22,
+     22,
+     22,
+     22,
+     23,
+     23,
+     23,
+     23,
+     24,
+     24,
+     24,
+     24,
+     26,
+     26,
+     28,
+     28,
+     28,
+     29,
+     30,
+     30,
+     30,
+     30,
+     32,
+     32,
+     32,
+     32,
+     33,
+     34,
+     35,
+     35,
+     36,
+     36,
+     38,
+     40,
+     40,
+     41,
+     42,
+     42,
+     42,
+     45,
+     50,
+     50,
+     51,
+     52,
+     53,
+     56,
+     57,
+     57,
+     58,
+     59,
+     60,
+     61,
+     62,
+     64,
+     65,
+     72,
+     72,
+     83,
+     91,
+     92,
+     93,
+     99,
+     107,
+     109,
+     117,
+     129,
+     132,
+     133,
+     136,
+     138,
+     157,
+     162,
+     187,
+     223,
+     236,
+     265,
+     268,
+     272,
+     303,
+     347,
+     1340,
+     1343
+    ]
+   },
+   "parts": {
+    "base": "2026-06-28",
+    "fences": "2026-10-23",
+    "pipeline": "2026-10-23",
+    "release_tag": "2026-10-21"
+   },
+   "pins": [
+    [
+     "2026-10-23",
+     "v4"
+    ],
+    [
+     "2026-10-23",
+     "v5"
+    ],
+    [
+     "2026-10-23",
+     "v7"
+    ],
+    [
+     "2026-10-23",
+     "v8"
+    ],
+    [
+     "2026-10-26",
+     "v11"
+    ]
+   ],
+   "prs": [
+    {
+     "cls": "mixed",
+     "kind": "unattended",
+     "lines": {
+      "backend": 250,
+      "frontend": 272,
+      "other": 832,
+      "tests": 622
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 107510276,
+      "cache_write": 3512189,
+      "input": 1460,
+      "output": 379923
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 260,
+      "frontend": 0,
+      "other": 105,
+      "tests": 265
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 19539322,
+      "cache_write": 209314,
+      "input": 258,
+      "output": 83978
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 489,
+      "frontend": 91,
+      "other": 119,
+      "tests": 376
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 92160502,
+      "cache_write": 948462,
+      "input": 896,
+      "output": 305171
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 1026,
+      "frontend": 67,
+      "other": 328,
+      "tests": 769
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 41767093,
+      "cache_write": 502309,
+      "input": 336,
+      "output": 167336
+     }
+    },
+    {
+     "cls": "mixed",
+     "kind": null,
+     "lines": {
+      "backend": 1156,
+      "frontend": 1190,
+      "other": 21061,
+      "tests": 335
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 183,
+      "frontend": 0,
+      "other": 30,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    }
+   ],
+   "split": {
+    "direct": {
+     "cache_read": 207564414,
+     "cache_write": 2913458,
+     "input": 2184,
+     "output": 845550
+    },
+    "helpers": {
+     "cache_read": 9216293,
+     "cache_write": 450921,
+     "input": 244,
+     "output": 10779
+    },
+    "pipeline": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tests": {
+    "calls": 156,
+    "tokens": {
+     "cache_read": 34656304,
+     "cache_write": 200803,
+     "input": 312,
+     "output": 149702
+    }
+   },
+   "tokens": {
+    "owner": {
+     "cache_read": 192843207,
+     "cache_write": 2879164,
+     "input": 2158,
+     "output": 769049
+    },
+    "unattended": {
+     "cache_read": 23937500,
+     "cache_write": 485215,
+     "input": 270,
+     "output": 87280
+    }
+   },
+   "turns": {
+    "owner": 118,
+    "unattended": 25
+   },
+   "unattributed": {
+    "cache_read": 18272535,
+    "cache_write": 501506,
+    "input": 288,
+    "output": 114223
+   }
+  },
+  "B": {
+   "ci": {
+    "minutes": 618.3,
+    "runs": 138
+   },
+   "delivery": {
+    "lines": {
+     "backend": 6751,
+     "frontend": 2485,
+     "other": 3980,
+     "tests": 8280
+    },
+    "merged": 25
+   },
+   "first_week": "2026-W39",
+   "friction": {
+    "interrupts": 9,
+    "prompts": 285,
+    "rejected": 2,
+    "swear": 4
+   },
+   "involvement": {
+    "lengths": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     3,
+     3,
+     3,
+     3,
+     4,
+     4,
+     5,
+     5,
+     5,
+     5,
+     5,
+     5,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     7,
+     8,
+     8,
+     9,
+     9,
+     9,
+     9,
+     10,
+     10,
+     10,
+     11,
+     11,
+     11,
+     11,
+     12,
+     12,
+     12,
+     12,
+     12,
+     13,
+     13,
+     13,
+     13,
+     13,
+     13,
+     13,
+     13,
+     14,
+     14,
+     14,
+     14,
+     14,
+     14,
+     14,
+     14,
+     14,
+     15,
+     15,
+     15,
+     15,
+     15,
+     15,
+     16,
+     16,
+     16,
+     16,
+     16,
+     16,
+     16,
+     16,
+     17,
+     17,
+     17,
+     17,
+     17,
+     17,
+     17,
+     17,
+     18,
+     18,
+     18,
+     18,
+     18,
+     18,
+     18,
+     18,
+     18,
+     19,
+     19,
+     19,
+     19,
+     19,
+     19,
+     19,
+     19,
+     19,
+     19,
+     19,
+     20,
+     20,
+     20,
+     20,
+     21,
+     21,
+     21,
+     21,
+     21,
+     21,
+     22,
+     22,
+     22,
+     22,
+     22,
+     22,
+     22,
+     23,
+     23,
+     23,
+     23,
+     23,
+     24,
+     24,
+     24,
+     24,
+     25,
+     25,
+     25,
+     25,
+     26,
+     26,
+     26,
+     26,
+     26,
+     26,
+     26,
+     26,
+     27,
+     27,
+     27,
+     28,
+     28,
+     29,
+     29,
+     29,
+     30,
+     30,
+     30,
+     31,
+     32,
+     32,
+     33,
+     33,
+     33,
+     34,
+     34,
+     34,
+     35,
+     35,
+     35,
+     35,
+     36,
+     36,
+     36,
+     36,
+     36,
+     36,
+     37,
+     37,
+     38,
+     38,
+     39,
+     39,
+     39,
+     40,
+     42,
+     43,
+     44,
+     44,
+     44,
+     45,
+     46,
+     46,
+     46,
+     47,
+     48,
+     48,
+     48,
+     49,
+     49,
+     49,
+     51,
+     51,
+     51,
+     51,
+     53,
+     55,
+     55,
+     55,
+     55,
+     57,
+     57,
+     57,
+     58,
+     59,
+     60,
+     61,
+     61,
+     62,
+     62,
+     62,
+     64,
+     66,
+     68,
+     68,
+     70,
+     71,
+     74,
+     75,
+     75,
+     76,
+     76,
+     76,
+     76,
+     78,
+     80,
+     81,
+     82,
+     88,
+     92,
+     94,
+     95,
+     98,
+     103,
+     109,
+     112,
+     118,
+     121,
+     125,
+     126,
+     130,
+     134,
+     137,
+     140,
+     145,
+     146,
+     164,
+     165,
+     165,
+     201,
+     245,
+     278,
+     318,
+     685,
+     946,
+     1092,
+     1693,
+     1904,
+     1957,
+     2001,
+     2392,
+     3138,
+     10029
+    ]
+   },
+   "parts": {
+    "base": "2026-04-13",
+    "fences": "2026-10-22",
+    "monitor": "2026-10-21",
+    "on_call": "2026-10-07",
+    "pipeline": "2026-10-23",
+    "release_tag": "2026-10-02"
+   },
+   "pins": [
+    [
+     "2026-10-22",
+     "v2"
+    ],
+    [
+     "2026-10-22",
+     "v3"
+    ],
+    [
+     "2026-10-23",
+     "v4"
+    ],
+    [
+     "2026-10-23",
+     "v5"
+    ],
+    [
+     "2026-10-23",
+     "v7"
+    ],
+    [
+     "2026-10-23",
+     "v8"
+    ],
+    [
+     "2026-10-26",
+     "v11"
+    ]
+   ],
+   "prs": [
+    {
+     "cls": "backend",
+     "kind": "unattended",
+     "lines": {
+      "backend": 31,
+      "frontend": 0,
+      "other": 37,
+      "tests": 47
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 1641143,
+      "cache_write": 37092,
+      "input": 24,
+      "output": 4805
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": null,
+     "lines": {
+      "backend": 250,
+      "frontend": 1827,
+      "other": 39,
+      "tests": 2132
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 71,
+      "frontend": 0,
+      "other": 32,
+      "tests": 172
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 4893552,
+      "cache_write": 110228,
+      "input": 110,
+      "output": 30330
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 563,
+      "frontend": 0,
+      "other": 126,
+      "tests": 983
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 54050284,
+      "cache_write": 862041,
+      "input": 654,
+      "output": 145796
+     }
+    },
+    {
+     "cls": "mixed",
+     "kind": "owner",
+     "lines": {
+      "backend": 738,
+      "frontend": 393,
+      "other": 426,
+      "tests": 1141
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 31109635,
+      "cache_write": 404779,
+      "input": 242,
+      "output": 131306
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 272,
+      "frontend": 0,
+      "other": 977,
+      "tests": 430
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 14373658,
+      "cache_write": 142331,
+      "input": 106,
+      "output": 49528
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 69,
+      "frontend": 0,
+      "other": 19,
+      "tests": 175
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 18601990,
+      "cache_write": 316698,
+      "input": 270,
+      "output": 60146
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 2157,
+      "frontend": 0,
+      "other": 1301,
+      "tests": 1193
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 1408,
+      "frontend": 0,
+      "other": 55,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 7173857,
+      "cache_write": 33434,
+      "input": 58,
+      "output": 13033
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 436,
+      "frontend": 0,
+      "other": 215,
+      "tests": 465
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 32506575,
+      "cache_write": 153777,
+      "input": 262,
+      "output": 76933
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 138,
+      "frontend": 0,
+      "other": 23,
+      "tests": 454
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 20505860,
+      "cache_write": 114606,
+      "input": 180,
+      "output": 57559
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 78,
+      "frontend": 0,
+      "other": 298,
+      "tests": 98
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 12801956,
+      "cache_write": 34730,
+      "input": 68,
+      "output": 18553
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 144,
+      "frontend": 0,
+      "other": 44,
+      "tests": 80
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 9075893,
+      "cache_write": 28000,
+      "input": 46,
+      "output": 21613
+     }
+    },
+    {
+     "cls": "other",
+     "kind": "unattended",
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 169,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 7111385,
+      "cache_write": 22991,
+      "input": 34,
+      "output": 12595
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 80,
+      "frontend": 0,
+      "other": 157,
+      "tests": 141
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 14014223,
+      "cache_write": 42028,
+      "input": 82,
+      "output": 27632
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 62,
+      "frontend": 0,
+      "other": 3,
+      "tests": 145
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 42961241,
+      "cache_write": 109309,
+      "input": 186,
+      "output": 59125
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 58,
+      "frontend": 16,
+      "other": 0,
+      "tests": 111
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 14028286,
+      "cache_write": 43852,
+      "input": 72,
+      "output": 23707
+     }
+    },
+    {
+     "cls": "other",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 5,
+      "tests": 6
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 4,
+      "frontend": 0,
+      "other": 0,
+      "tests": 30
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 76,
+      "frontend": 0,
+      "other": 0,
+      "tests": 143
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 50,
+      "frontend": 0,
+      "other": 1,
+      "tests": 158
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 249,
+      "other": 0,
+      "tests": 35
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "other",
+     "kind": "owner",
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 10,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 4366589,
+      "cache_write": 211536,
+      "input": 114,
+      "output": 25921
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 28,
+      "frontend": 0,
+      "other": 10,
+      "tests": 81
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 2571888,
+      "cache_write": 11144,
+      "input": 14,
+      "output": 3003
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 38,
+      "frontend": 0,
+      "other": 33,
+      "tests": 60
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 24925997,
+      "cache_write": 372816,
+      "input": 158,
+      "output": 41703
+     }
+    }
+   ],
+   "split": {
+    "direct": {
+     "cache_read": 606054027,
+     "cache_write": 9060811,
+     "input": 5769,
+     "output": 1934513
+    },
+    "helpers": {
+     "cache_read": 87493786,
+     "cache_write": 2776777,
+     "input": 1952,
+     "output": 254373
+    },
+    "pipeline": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tests": {
+    "calls": 383,
+    "tokens": {
+     "cache_read": 80064860,
+     "cache_write": 530811,
+     "input": 766,
+     "output": 306271
+    }
+   },
+   "tokens": {
+    "owner": {
+     "cache_read": 540616523,
+     "cache_write": 9535598,
+     "input": 5553,
+     "output": 1731381
+    },
+    "unattended": {
+     "cache_read": 152931290,
+     "cache_write": 2301990,
+     "input": 2168,
+     "output": 457505
+    }
+   },
+   "turns": {
+    "owner": 285,
+    "unattended": 106
+   },
+   "unattributed": {
+    "cache_read": 205966124,
+    "cache_write": 3054965,
+    "input": 2516,
+    "output": 824693
+   }
+  },
+  "C": {
+   "ci": {
+    "minutes": 0.0,
+    "runs": 0
+   },
+   "delivery": {
+    "lines": {
+     "backend": 0,
+     "frontend": 0,
+     "other": 0,
+     "tests": 0
+    },
+    "merged": 0
+   },
+   "first_week": "2026-W42",
+   "friction": {
+    "interrupts": 0,
+    "prompts": 0,
+    "rejected": 0,
+    "swear": 0
+   },
+   "involvement": {
+    "lengths": []
+   },
+   "parts": {
+    "base": "2026-10-15",
+    "fences": "2026-10-22",
+    "on_call": "2026-10-16",
+    "release_tag": "2026-10-22"
+   },
+   "pins": [
+    [
+     "2026-10-22",
+     "v2"
+    ],
+    [
+     "2026-10-22",
+     "v3"
+    ],
+    [
+     "2026-10-23",
+     "v4"
+    ],
+    [
+     "2026-10-23",
+     "v5"
+    ],
+    [
+     "2026-10-23",
+     "v7"
+    ],
+    [
+     "2026-10-23",
+     "v8"
+    ],
+    [
+     "2026-10-26",
+     "v11"
+    ]
+   ],
+   "prs": [],
+   "split": {
+    "direct": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "helpers": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "pipeline": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tests": {
+    "calls": 0,
+    "tokens": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tokens": {},
+   "turns": {},
+   "unattributed": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+   }
+  }
+ },
+ "week": "2026-W40"
+}

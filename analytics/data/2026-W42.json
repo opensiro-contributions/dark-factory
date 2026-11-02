@@ -1,0 +1,1677 @@
+{
+ "collected_at": "2026-10-26T21:15:29Z",
+ "factory": {
+  "releases": {
+   "v1": "2026-10-22",
+   "v10": "2026-10-26",
+   "v11": "2026-10-26",
+   "v2": "2026-10-22",
+   "v3": "2026-10-22",
+   "v4": "2026-10-23",
+   "v5": "2026-10-23",
+   "v6": "2026-10-23",
+   "v7": "2026-10-23",
+   "v8": "2026-10-23",
+   "v9": "2026-10-23"
+  },
+  "server": {
+   "analytics": "2026-10-26",
+   "fleet_watch": "2026-10-26",
+   "janitor": "2026-10-26"
+  }
+ },
+ "final": true,
+ "projects": {
+  "A": {
+   "ci": {
+    "minutes": 69.2,
+    "runs": 14
+   },
+   "delivery": {
+    "lines": {
+     "backend": 2245,
+     "frontend": 547,
+     "other": 3219,
+     "tests": 1899
+    },
+    "merged": 5
+   },
+   "first_week": "2026-W39",
+   "friction": {
+    "interrupts": 5,
+    "prompts": 108,
+    "rejected": 1,
+    "swear": 3
+   },
+   "involvement": {
+    "lengths": [
+     1,
+     1,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     5,
+     6,
+     6,
+     7,
+     7,
+     7,
+     7,
+     8,
+     8,
+     9,
+     9,
+     10,
+     10,
+     10,
+     11,
+     13,
+     14,
+     14,
+     15,
+     16,
+     16,
+     16,
+     17,
+     17,
+     19,
+     20,
+     20,
+     21,
+     21,
+     21,
+     23,
+     24,
+     24,
+     26,
+     26,
+     27,
+     29,
+     30,
+     31,
+     32,
+     33,
+     33,
+     33,
+     34,
+     34,
+     35,
+     36,
+     36,
+     37,
+     41,
+     43,
+     43,
+     44,
+     49,
+     53,
+     54,
+     60,
+     61,
+     61,
+     62,
+     62,
+     62,
+     65,
+     69,
+     74,
+     76,
+     78,
+     79,
+     80,
+     82,
+     82,
+     83,
+     94,
+     103,
+     107,
+     114,
+     129,
+     130,
+     134,
+     152,
+     164,
+     192,
+     229,
+     234,
+     282,
+     306,
+     318,
+     341,
+     381,
+     419,
+     475,
+     538,
+     609,
+     1124,
+     1556,
+     1740,
+     3396,
+     7141
+    ]
+   },
+   "parts": {
+    "base": "2026-06-28",
+    "fences": "2026-10-23",
+    "pipeline": "2026-10-23",
+    "release_tag": "2026-10-21"
+   },
+   "pins": [
+    [
+     "2026-10-23",
+     "v4"
+    ],
+    [
+     "2026-10-23",
+     "v5"
+    ],
+    [
+     "2026-10-23",
+     "v7"
+    ],
+    [
+     "2026-10-23",
+     "v8"
+    ],
+    [
+     "2026-10-26",
+     "v11"
+    ]
+   ],
+   "prs": [
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 642,
+      "frontend": 0,
+      "other": 236,
+      "tests": 669
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 250,
+      "frontend": 51,
+      "other": 127,
+      "tests": 396
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 144753629,
+      "cache_write": 3225925,
+      "input": 1230,
+      "output": 384363
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 1308,
+      "frontend": 496,
+      "other": 298,
+      "tests": 775
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 29904103,
+      "cache_write": 33814,
+      "input": 104,
+      "output": 18417
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 39,
+      "frontend": 0,
+      "other": 2318,
+      "tests": 35
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 6,
+      "frontend": 0,
+      "other": 240,
+      "tests": 24
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 139159591,
+      "cache_write": 9396213,
+      "input": 2326,
+      "output": 287057
+     }
+    }
+   ],
+   "split": {
+    "direct": {
+     "cache_read": 345858735,
+     "cache_write": 7099495,
+     "input": 2220,
+     "output": 900408
+    },
+    "helpers": {
+     "cache_read": 99712326,
+     "cache_write": 8800166,
+     "input": 1908,
+     "output": 62629
+    },
+    "pipeline": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tests": {
+    "calls": 184,
+    "tokens": {
+     "cache_read": 68928474,
+     "cache_write": 288542,
+     "input": 370,
+     "output": 212777
+    }
+   },
+   "tokens": {
+    "owner": {
+     "cache_read": 328315889,
+     "cache_write": 15401554,
+     "input": 3480,
+     "output": 691001
+    },
+    "unattended": {
+     "cache_read": 117255172,
+     "cache_write": 498107,
+     "input": 648,
+     "output": 272036
+    }
+   },
+   "turns": {
+    "owner": 108,
+    "unattended": 39
+   },
+   "unattributed": {
+    "cache_read": 160561598,
+    "cache_write": 4219621,
+    "input": 952,
+    "output": 401574
+   }
+  },
+  "B": {
+   "ci": {
+    "minutes": 628.6,
+    "runs": 116
+   },
+   "delivery": {
+    "lines": {
+     "backend": 6182,
+     "frontend": 1405,
+     "other": 1211,
+     "tests": 8368
+    },
+    "merged": 18
+   },
+   "first_week": "2026-W39",
+   "friction": {
+    "interrupts": 0,
+    "prompts": 38,
+    "rejected": 0,
+    "swear": 0
+   },
+   "involvement": {
+    "lengths": [
+     6,
+     6,
+     7,
+     8,
+     8,
+     9,
+     9,
+     10,
+     11,
+     11,
+     14,
+     15,
+     15,
+     17,
+     17,
+     18,
+     19,
+     20,
+     20,
+     21,
+     23,
+     24,
+     27,
+     31,
+     32,
+     43,
+     50,
+     51,
+     65,
+     84,
+     126,
+     195,
+     216,
+     225,
+     237,
+     276,
+     1163,
+     10236
+    ]
+   },
+   "parts": {
+    "base": "2026-04-13",
+    "fences": "2026-10-22",
+    "monitor": "2026-10-21",
+    "on_call": "2026-10-07",
+    "pipeline": "2026-10-23",
+    "release_tag": "2026-10-02"
+   },
+   "pins": [
+    [
+     "2026-10-22",
+     "v2"
+    ],
+    [
+     "2026-10-22",
+     "v3"
+    ],
+    [
+     "2026-10-23",
+     "v4"
+    ],
+    [
+     "2026-10-23",
+     "v5"
+    ],
+    [
+     "2026-10-23",
+     "v7"
+    ],
+    [
+     "2026-10-23",
+     "v8"
+    ],
+    [
+     "2026-10-26",
+     "v11"
+    ]
+   ],
+   "prs": [
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 78,
+      "frontend": 0,
+      "other": 19,
+      "tests": 168
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 396,
+      "frontend": 0,
+      "other": 19,
+      "tests": 452
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 14,
+      "frontend": 0,
+      "other": 3,
+      "tests": 22
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 44,
+      "frontend": 0,
+      "other": 15,
+      "tests": 84
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "other",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 0,
+      "tests": 2
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 460,
+      "frontend": 0,
+      "other": 24,
+      "tests": 785
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 7,
+      "frontend": 0,
+      "other": 0,
+      "tests": 8
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 1021,
+      "frontend": 258,
+      "other": 46,
+      "tests": 1332
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 284,
+      "frontend": 0,
+      "other": 19,
+      "tests": 272
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 40,
+      "frontend": 0,
+      "other": 16,
+      "tests": 131
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 739,
+      "frontend": 0,
+      "other": 168,
+      "tests": 780
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 102,
+      "frontend": 0,
+      "other": 21,
+      "tests": 139
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "mixed",
+     "kind": null,
+     "lines": {
+      "backend": 1016,
+      "frontend": 878,
+      "other": 141,
+      "tests": 1300
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 73,
+      "frontend": 0,
+      "other": 18,
+      "tests": 142
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "other",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 13,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "other",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 8,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 130,
+      "frontend": 0,
+      "other": 22,
+      "tests": 261
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 1778,
+      "frontend": 269,
+      "other": 659,
+      "tests": 2490
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    }
+   ],
+   "split": {
+    "direct": {
+     "cache_read": 144191972,
+     "cache_write": 6188982,
+     "input": 2194,
+     "output": 391751
+    },
+    "helpers": {
+     "cache_read": 962012,
+     "cache_write": 133079,
+     "input": 42,
+     "output": 3156
+    },
+    "pipeline": {
+     "cache_read": 37781456,
+     "cache_write": 1966882,
+     "input": 786,
+     "output": 283539
+    }
+   },
+   "tests": {
+    "calls": 67,
+    "tokens": {
+     "cache_read": 9298171,
+     "cache_write": 109506,
+     "input": 134,
+     "output": 64199
+    }
+   },
+   "tokens": {
+    "on_call": {
+     "cache_read": 84335897,
+     "cache_write": 4439386,
+     "input": 1454,
+     "output": 343042
+    },
+    "owner": {
+     "cache_read": 29175849,
+     "cache_write": 576786,
+     "input": 366,
+     "output": 96115
+    },
+    "unattended": {
+     "cache_read": 69423694,
+     "cache_write": 3272771,
+     "input": 1202,
+     "output": 239289
+    }
+   },
+   "turns": {
+    "on_call": 145,
+    "owner": 38,
+    "unattended": 133
+   },
+   "unattributed": {
+    "cache_read": 182935440,
+    "cache_write": 8288943,
+    "input": 3022,
+    "output": 678446
+   }
+  },
+  "C": {
+   "ci": {
+    "minutes": 143.2,
+    "runs": 95
+   },
+   "delivery": {
+    "lines": {
+     "backend": 6237,
+     "frontend": 13473,
+     "other": 145408,
+     "tests": 12613
+    },
+    "merged": 39
+   },
+   "first_week": "2026-W42",
+   "friction": {
+    "interrupts": 8,
+    "prompts": 91,
+    "rejected": 5,
+    "swear": 1
+   },
+   "involvement": {
+    "lengths": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     3,
+     5,
+     5,
+     6,
+     7,
+     7,
+     7,
+     10,
+     10,
+     11,
+     11,
+     12,
+     12,
+     12,
+     13,
+     13,
+     13,
+     14,
+     15,
+     15,
+     16,
+     16,
+     17,
+     17,
+     18,
+     18,
+     18,
+     18,
+     19,
+     20,
+     20,
+     21,
+     21,
+     22,
+     22,
+     26,
+     27,
+     28,
+     29,
+     29,
+     34,
+     37,
+     38,
+     39,
+     41,
+     43,
+     44,
+     50,
+     51,
+     53,
+     53,
+     56,
+     61,
+     64,
+     69,
+     86,
+     90,
+     98,
+     100,
+     130,
+     134,
+     137,
+     160,
+     166,
+     168,
+     201,
+     204,
+     242,
+     343,
+     483,
+     535,
+     579,
+     631,
+     749,
+     1371,
+     2912,
+     3052,
+     4463,
+     11387
+    ]
+   },
+   "parts": {
+    "base": "2026-10-15",
+    "fences": "2026-10-22",
+    "on_call": "2026-10-16",
+    "release_tag": "2026-10-22"
+   },
+   "pins": [
+    [
+     "2026-10-22",
+     "v2"
+    ],
+    [
+     "2026-10-22",
+     "v3"
+    ],
+    [
+     "2026-10-23",
+     "v4"
+    ],
+    [
+     "2026-10-23",
+     "v5"
+    ],
+    [
+     "2026-10-23",
+     "v7"
+    ],
+    [
+     "2026-10-23",
+     "v8"
+    ],
+    [
+     "2026-10-26",
+     "v11"
+    ]
+   ],
+   "prs": [
+    {
+     "cls": "mixed",
+     "kind": null,
+     "lines": {
+      "backend": 1892,
+      "frontend": 2978,
+      "other": 8334,
+      "tests": 2269
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 1227,
+      "frontend": 0,
+      "other": 3395,
+      "tests": 1226
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 301315,
+      "cache_write": 43224,
+      "input": 10,
+      "output": 2456
+     }
+    },
+    {
+     "cls": "other",
+     "kind": "owner",
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 44071,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 4052747,
+      "cache_write": 38479,
+      "input": 38,
+      "output": 10815
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 14,
+      "frontend": 0,
+      "other": 10,
+      "tests": 69
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 2273,
+      "other": 15,
+      "tests": 865
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "other",
+     "kind": "unattended",
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 759,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 57870793,
+      "cache_write": 1071483,
+      "input": 642,
+      "output": 156875
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 2439,
+      "other": 27,
+      "tests": 932
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "other",
+     "kind": "owner",
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 291,
+      "tests": 327
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 58676688,
+      "cache_write": 1218072,
+      "input": 596,
+      "output": 130499
+     }
+    },
+    {
+     "cls": "other",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 2039,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 49,
+      "frontend": 0,
+      "other": 10,
+      "tests": 36
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 7756408,
+      "cache_write": 30742,
+      "input": 56,
+      "output": 16799
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 26,
+      "frontend": 0,
+      "other": 53,
+      "tests": 3
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 4812500,
+      "cache_write": 10792,
+      "input": 18,
+      "output": 6003
+     }
+    },
+    {
+     "cls": "other",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 68,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 107,
+      "frontend": 0,
+      "other": 326,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 5005988,
+      "cache_write": 97445,
+      "input": 88,
+      "output": 23136
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 4,
+      "other": 13,
+      "tests": 5
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 35,
+      "frontend": 11,
+      "other": 30,
+      "tests": 35
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 578837,
+      "cache_write": 1347,
+      "input": 6,
+      "output": 1333
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "owner",
+     "lines": {
+      "backend": 8,
+      "frontend": 0,
+      "other": 14,
+      "tests": 23
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 8360707,
+      "cache_write": 29302,
+      "input": 86,
+      "output": 17858
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": "owner",
+     "lines": {
+      "backend": 0,
+      "frontend": 849,
+      "other": 16,
+      "tests": 156
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 31202431,
+      "cache_write": 280926,
+      "input": 258,
+      "output": 70096
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": "unattended",
+     "lines": {
+      "backend": 0,
+      "frontend": 12,
+      "other": 26,
+      "tests": 75
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 2730076,
+      "cache_write": 29362,
+      "input": 46,
+      "output": 1411
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": "unattended",
+     "lines": {
+      "backend": 0,
+      "frontend": 81,
+      "other": 16,
+      "tests": 85
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 2805083,
+      "cache_write": 16236,
+      "input": 40,
+      "output": 2166
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 199,
+      "frontend": 0,
+      "other": 18,
+      "tests": 240
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": "unattended",
+     "lines": {
+      "backend": 29,
+      "frontend": 0,
+      "other": 31,
+      "tests": 32
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 769519,
+      "cache_write": 3631,
+      "input": 6,
+      "output": 579
+     }
+    },
+    {
+     "cls": "other",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 81443,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 37,
+      "other": 17,
+      "tests": 28
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": "unattended",
+     "lines": {
+      "backend": 49,
+      "frontend": 257,
+      "other": 61,
+      "tests": 324
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 7107755,
+      "cache_write": 60912,
+      "input": 92,
+      "output": 7981
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": "unattended",
+     "lines": {
+      "backend": 0,
+      "frontend": 794,
+      "other": 194,
+      "tests": 227
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 21331187,
+      "cache_write": 735214,
+      "input": 258,
+      "output": 28348
+     }
+    },
+    {
+     "cls": "other",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 689,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 174,
+      "other": 33,
+      "tests": 121
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": null,
+     "lines": {
+      "backend": 5,
+      "frontend": 56,
+      "other": 34,
+      "tests": 127
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "other",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 346,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "mixed",
+     "kind": "unattended",
+     "lines": {
+      "backend": 98,
+      "frontend": 140,
+      "other": 107,
+      "tests": 446
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 21054303,
+      "cache_write": 672235,
+      "input": 464,
+      "output": 35548
+     }
+    },
+    {
+     "cls": "other",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 132,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "backend",
+     "kind": null,
+     "lines": {
+      "backend": 35,
+      "frontend": 13,
+      "other": 27,
+      "tests": 125
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "other",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 442,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "mixed",
+     "kind": "unattended",
+     "lines": {
+      "backend": 416,
+      "frontend": 654,
+      "other": 622,
+      "tests": 886
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 42744133,
+      "cache_write": 302912,
+      "input": 416,
+      "output": 18263
+     }
+    },
+    {
+     "cls": "mixed",
+     "kind": null,
+     "lines": {
+      "backend": 622,
+      "frontend": 1042,
+      "other": 375,
+      "tests": 1333
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "other",
+     "kind": "owner",
+     "lines": {
+      "backend": 0,
+      "frontend": 0,
+      "other": 427,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 642775,
+      "cache_write": 814596,
+      "input": 22,
+      "output": 1507
+     }
+    },
+    {
+     "cls": "mixed",
+     "kind": "owner",
+     "lines": {
+      "backend": 1177,
+      "frontend": 1078,
+      "other": 696,
+      "tests": 1471
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 91235945,
+      "cache_write": 1035564,
+      "input": 1098,
+      "output": 73544
+     }
+    },
+    {
+     "cls": "mixed",
+     "kind": null,
+     "lines": {
+      "backend": 154,
+      "frontend": 132,
+      "other": 65,
+      "tests": 509
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": "unattended",
+     "lines": {
+      "backend": 95,
+      "frontend": 449,
+      "other": 136,
+      "tests": 638
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 21026518,
+      "cache_write": 113468,
+      "input": 192,
+      "output": 20691
+     }
+    }
+   ],
+   "split": {
+    "direct": {
+     "cache_read": 216947938,
+     "cache_write": 4313820,
+     "input": 2004,
+     "output": 536159
+    },
+    "helpers": {
+     "cache_read": 361446010,
+     "cache_write": 10496038,
+     "input": 5746,
+     "output": 329920
+    },
+    "pipeline": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tests": {
+    "calls": 761,
+    "tokens": {
+     "cache_read": 116839619,
+     "cache_write": 1126557,
+     "input": 1528,
+     "output": 89129
+    }
+   },
+   "tokens": {
+    "on_call": {
+     "cache_read": 1710760,
+     "cache_write": 171518,
+     "input": 62,
+     "output": 9951
+    },
+    "owner": {
+     "cache_read": 232195408,
+     "cache_write": 7588030,
+     "input": 3320,
+     "output": 402401
+    },
+    "unattended": {
+     "cache_read": 344487780,
+     "cache_write": 7050310,
+     "input": 4368,
+     "output": 453727
+    }
+   },
+   "turns": {
+    "on_call": 10,
+    "owner": 91,
+    "unattended": 86
+   },
+   "unattributed": {
+    "cache_read": 188629555,
+    "cache_write": 8247140,
+    "input": 3328,
+    "output": 242627
+   }
+  }
+ },
+ "week": "2026-W42"
+}

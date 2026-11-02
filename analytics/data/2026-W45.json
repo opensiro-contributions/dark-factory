@@ -1,0 +1,437 @@
+{
+ "collected_at": "2026-11-02T05:22:59Z",
+ "factory": {
+  "releases": {
+   "v1": "2026-10-22",
+   "v10": "2026-10-26",
+   "v11": "2026-10-26",
+   "v12": "2026-10-27",
+   "v13": "2026-10-27",
+   "v14": "2026-10-27",
+   "v15": "2026-10-27",
+   "v16": "2026-10-29",
+   "v2": "2026-10-22",
+   "v3": "2026-10-22",
+   "v4": "2026-10-23",
+   "v5": "2026-10-23",
+   "v6": "2026-10-23",
+   "v7": "2026-10-23",
+   "v8": "2026-10-23",
+   "v9": "2026-10-23"
+  },
+  "server": {
+   "analytics": "2026-10-26",
+   "fleet_watch": "2026-10-26",
+   "janitor": "2026-10-26"
+  }
+ },
+ "final": false,
+ "projects": {
+  "A": {
+   "ci": {
+    "minutes": 0.0,
+    "runs": 0
+   },
+   "delivery": {
+    "lines": {
+     "backend": 0,
+     "frontend": 0,
+     "other": 0,
+     "tests": 0
+    },
+    "merged": 0
+   },
+   "first_week": "2026-W39",
+   "friction": {
+    "interrupts": 0,
+    "prompts": 0,
+    "rejected": 0,
+    "swear": 0
+   },
+   "involvement": {
+    "lengths": []
+   },
+   "parts": {
+    "base": "2026-06-28",
+    "fences": "2026-10-23",
+    "pipeline": "2026-10-23",
+    "release_tag": "2026-10-21"
+   },
+   "pins": [
+    [
+     "2026-10-23",
+     "v4"
+    ],
+    [
+     "2026-10-23",
+     "v5"
+    ],
+    [
+     "2026-10-23",
+     "v7"
+    ],
+    [
+     "2026-10-23",
+     "v8"
+    ],
+    [
+     "2026-10-26",
+     "v11"
+    ],
+    [
+     "2026-10-27",
+     "v12"
+    ],
+    [
+     "2026-10-27",
+     "v14"
+    ],
+    [
+     "2026-10-27",
+     "v15"
+    ]
+   ],
+   "prs": [],
+   "split": {
+    "direct": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "helpers": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "pipeline": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tests": {
+    "calls": 0,
+    "tokens": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tokens": {},
+   "turns": {},
+   "unattributed": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+   }
+  },
+  "B": {
+   "ci": {
+    "minutes": 0.0,
+    "runs": 0
+   },
+   "delivery": {
+    "lines": {
+     "backend": 0,
+     "frontend": 0,
+     "other": 0,
+     "tests": 0
+    },
+    "merged": 0
+   },
+   "first_week": "2026-W39",
+   "friction": {
+    "interrupts": 0,
+    "prompts": 0,
+    "rejected": 0,
+    "swear": 0
+   },
+   "involvement": {
+    "lengths": []
+   },
+   "parts": {
+    "base": "2026-04-13",
+    "fences": "2026-10-22",
+    "monitor": "2026-10-21",
+    "on_call": "2026-10-07",
+    "pipeline": "2026-10-23",
+    "release_tag": "2026-10-02"
+   },
+   "pins": [
+    [
+     "2026-10-22",
+     "v2"
+    ],
+    [
+     "2026-10-22",
+     "v3"
+    ],
+    [
+     "2026-10-23",
+     "v4"
+    ],
+    [
+     "2026-10-23",
+     "v5"
+    ],
+    [
+     "2026-10-23",
+     "v7"
+    ],
+    [
+     "2026-10-23",
+     "v8"
+    ],
+    [
+     "2026-10-26",
+     "v11"
+    ],
+    [
+     "2026-10-27",
+     "v12"
+    ],
+    [
+     "2026-10-27",
+     "v14"
+    ],
+    [
+     "2026-10-27",
+     "v15"
+    ]
+   ],
+   "prs": [],
+   "split": {
+    "direct": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "helpers": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "pipeline": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tests": {
+    "calls": 0,
+    "tokens": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tokens": {},
+   "turns": {},
+   "unattributed": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+   }
+  },
+  "C": {
+   "ci": {
+    "minutes": 11.6,
+    "runs": 14
+   },
+   "delivery": {
+    "lines": {
+     "backend": 223,
+     "frontend": 897,
+     "other": 499,
+     "tests": 445
+    },
+    "merged": 3
+   },
+   "first_week": "2026-W42",
+   "friction": {
+    "interrupts": 0,
+    "prompts": 1,
+    "rejected": 0,
+    "swear": 0
+   },
+   "involvement": {
+    "lengths": [
+     10026
+    ]
+   },
+   "parts": {
+    "base": "2026-10-15",
+    "fences": "2026-10-22",
+    "on_call": "2026-10-16",
+    "pipeline": "2026-10-27",
+    "release_tag": "2026-10-22"
+   },
+   "pins": [
+    [
+     "2026-10-22",
+     "v2"
+    ],
+    [
+     "2026-10-22",
+     "v3"
+    ],
+    [
+     "2026-10-23",
+     "v4"
+    ],
+    [
+     "2026-10-23",
+     "v5"
+    ],
+    [
+     "2026-10-23",
+     "v7"
+    ],
+    [
+     "2026-10-23",
+     "v8"
+    ],
+    [
+     "2026-10-26",
+     "v11"
+    ],
+    [
+     "2026-10-27",
+     "v12"
+    ],
+    [
+     "2026-10-27",
+     "v14"
+    ],
+    [
+     "2026-10-27",
+     "v15"
+    ]
+   ],
+   "prs": [
+    {
+     "cls": "frontend",
+     "kind": null,
+     "lines": {
+      "backend": 0,
+      "frontend": 66,
+      "other": 8,
+      "tests": 0
+     },
+     "pipeline": false,
+     "tokens": {
+      "cache_read": 0,
+      "cache_write": 0,
+      "input": 0,
+      "output": 0
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": "unattended",
+     "lines": {
+      "backend": 223,
+      "frontend": 805,
+      "other": 483,
+      "tests": 445
+     },
+     "pipeline": true,
+     "tokens": {
+      "cache_read": 107051197,
+      "cache_write": 751693,
+      "input": 856,
+      "output": 237280
+     }
+    },
+    {
+     "cls": "frontend",
+     "kind": "unattended",
+     "lines": {
+      "backend": 0,
+      "frontend": 26,
+      "other": 8,
+      "tests": 0
+     },
+     "pipeline": true,
+     "tokens": {
+      "cache_read": 32476269,
+      "cache_write": 276845,
+      "input": 380,
+      "output": 97245
+     }
+    }
+   ],
+   "split": {
+    "direct": {
+     "cache_read": 10807621,
+     "cache_write": 215082,
+     "input": 78,
+     "output": 14865
+    },
+    "helpers": {
+     "cache_read": 24501519,
+     "cache_write": 223427,
+     "input": 302,
+     "output": 81433
+    },
+    "pipeline": {
+     "cache_read": 1530995,
+     "cache_write": 86148,
+     "input": 56,
+     "output": 11728
+    }
+   },
+   "tests": {
+    "calls": 11,
+    "tokens": {
+     "cache_read": 2019735,
+     "cache_write": 16990,
+     "input": 22,
+     "output": 4816
+    }
+   },
+   "tokens": {
+    "on_call": {
+     "cache_read": 388548,
+     "cache_write": 13841,
+     "input": 6,
+     "output": 767
+    },
+    "owner": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "unattended": {
+     "cache_read": 36451587,
+     "cache_write": 510816,
+     "input": 430,
+     "output": 107259
+    }
+   },
+   "turns": {
+    "on_call": 1,
+    "owner": 1,
+    "unattended": 7
+   },
+   "unattributed": {
+    "cache_read": 183819,
+    "cache_write": 184578,
+    "input": 4,
+    "output": 708
+   }
+  }
+ },
+ "week": "2026-W45"
+}
