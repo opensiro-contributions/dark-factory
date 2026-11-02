@@ -418,6 +418,8 @@ def leak_terms(checkouts: list[Path], weeks: list[dict], settings: store.Setting
     for d in weeks:
         for repo, p in d.get("projects", {}).items():
             terms |= {repo, *repo.split("/")}
+            if repo == canon_repo:  # the canon's own branches name its own parts (feat/janitor), not a secret
+                continue
             for pr in p.get("prs") or []:
                 head = pr.get("head") or ""
                 if "/" in head:
