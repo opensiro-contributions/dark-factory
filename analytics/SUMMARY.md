@@ -10,7 +10,7 @@ Every week the factory counts its own work; one file per week in this directory,
 | 2026-W42 | 1.2B | 49% | 7% | 0% | 43% | 62 | 29 | 12 | 841 | 237 | 3.8 | 9.7 | C: first week, base, on_call |
 | 2026-W43 | 3.1B | 60% | 2% | 0% | 38% | 166 | 41 | 55 | 1.1k | 736 | 4.4 | 5.0 | A: fences, pipeline, release_tag; B: fences, monitor, pipeline; C: fences, release_tag; plugin v1–v9 |
 | 2026-W44 | 2.7B | 34% | 12% | 0% | 54% | 144 | 17 | 82 | 888 | 486 | 3.4 | 5.1 | C: pipeline; plugin v10–v16; server: analytics, fleet_watch, janitor |
-| 2026-W45 (partial) | 37.5M | 0% | 1% | 0% | 99% | 3 | 0 | 3 | 11.6 | 1 | 0.3 | 0.0 |  |
+| 2026-W45 (partial) | 45.3M | 1% | 13% | 0% | 86% | 3 | 0 | 3 | 16.5 | 4 | 1.3 | 0.0 | plugin v17 |
 
 ## By project
 
@@ -38,7 +38,7 @@ How involvement changes as a project matures: each project's weeks, numbered fro
 | 2026-W42 | 4 | 16% | 46% | 38% | 2.1 | 18 | 16.0k |  |
 | 2026-W43 | 5 | 79% | 10% | 10% | 10.4 | 22 | 12.9k | fences, monitor, pipeline |
 | 2026-W44 | 6 | 75% | 10% | 15% | 18.1 | 7 | 43 |  |
-| 2026-W45 | 7 | — | — | — | — | 0 | 0 |  |
+| 2026-W45 | 7 | 23% | — | 77% | — | 0 | 0 |  |
 
 ### C
 
@@ -47,7 +47,7 @@ How involvement changes as a project matures: each project's weeks, numbered fro
 | 2026-W42 | 1 | 40% | 0% | 59% | 2.3 | 39 | 32.3k | first week, base, on_call |
 | 2026-W43 | 2 | 46% | 0% | 53% | 1.6 | 134 | 126.1k | fences, release_tag |
 | 2026-W44 | 3 | 32% | 12% | 56% | 2.6 | 127 | 85.4k | pipeline |
-| 2026-W45 | 4 | — | 1% | 99% | 0.3 | 3 | 1.6k |  |
+| 2026-W45 | 4 | 1% | 14% | 86% | 1.0 | 3 | 1.6k |  |
 
 ## By project week
 
@@ -58,9 +58,10 @@ All projects lined up by their age: the mean of each project's share in its N-th
 | 1 | 3 | 62% | 0% | 38% | 3.9 |
 | 2 | 3 | 71% | 0% | 29% | 10.9 |
 | 3 | 3 | 53% | 8% | 39% | 7.7 |
-| 4 | 3 | 30% | 16% | 54% | 8.0 |
+| 4 | 3 | 30% | 20% | 50% | 8.2 |
 | 5 | 2 | 82% | 5% | 12% | 19.7 |
 | 6 | 2 | 68% | 5% | 27% | 10.8 |
+| 7 | 1 | 23% | — | 77% | — |
 
 ## Parts
 
@@ -72,5 +73,5 @@ The week each part first appeared in a project (installed, not necessarily in us
 | B | 2026-W39 | 2026-W16 | 2026-W43 | 2026-W43 | 2026-W41 | 2026-W43 | 2026-W40 |
 | C | 2026-W42 | 2026-W42 | 2026-W43 | — | 2026-W42 | 2026-W44 | 2026-W43 |
 
-Plugin releases: v1 2026-10-22, v2 2026-10-22, v3 2026-10-22, v4 2026-10-23, v5 2026-10-23, v6 2026-10-23, v7 2026-10-23, v8 2026-10-23, v9 2026-10-23, v10 2026-10-26, v11 2026-10-26, v12 2026-10-27, v13 2026-10-27, v14 2026-10-27, v15 2026-10-27, v16 2026-10-29.
+Plugin releases: v1 2026-10-22, v2 2026-10-22, v3 2026-10-22, v4 2026-10-23, v5 2026-10-23, v6 2026-10-23, v7 2026-10-23, v8 2026-10-23, v9 2026-10-23, v10 2026-10-26, v11 2026-10-26, v12 2026-10-27, v13 2026-10-27, v14 2026-10-27, v15 2026-10-27, v16 2026-10-29, v17 2026-11-02.
 

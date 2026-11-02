@@ -1,5 +1,5 @@
 {
- "collected_at": "2026-11-02T05:22:59Z",
+ "collected_at": "2026-11-02T10:38:35Z",
  "factory": {
   "releases": {
    "v1": "2026-10-22",
@@ -10,6 +10,7 @@
    "v14": "2026-10-27",
    "v15": "2026-10-27",
    "v16": "2026-10-29",
+   "v17": "2026-11-02",
    "v2": "2026-10-22",
    "v3": "2026-10-22",
    "v4": "2026-10-23",
@@ -132,8 +133,8 @@
   },
   "B": {
    "ci": {
-    "minutes": 0.0,
-    "runs": 0
+    "minutes": 4.9,
+    "runs": 1
    },
    "delivery": {
     "lines": {
@@ -147,12 +148,14 @@
    "first_week": "2026-W39",
    "friction": {
     "interrupts": 0,
-    "prompts": 0,
+    "prompts": 1,
     "rejected": 0,
     "swear": 0
    },
    "involvement": {
-    "lengths": []
+    "lengths": [
+     385
+    ]
    },
    "parts": {
     "base": "2026-04-13",
@@ -207,10 +210,10 @@
    "prs": [],
    "split": {
     "direct": {
-     "cache_read": 0,
-     "cache_write": 0,
-     "input": 0,
-     "output": 0
+     "cache_read": 203135,
+     "cache_write": 100489,
+     "input": 16,
+     "output": 3144
     },
     "helpers": {
      "cache_read": 0,
@@ -234,13 +237,36 @@
      "output": 0
     }
    },
-   "tokens": {},
-   "turns": {},
+   "tokens": {
+    "monitor": {
+     "cache_read": 22303,
+     "cache_write": 23320,
+     "input": 6,
+     "output": 2060
+    },
+    "owner": {
+     "cache_read": 28492,
+     "cache_write": 42398,
+     "input": 2,
+     "output": 305
+    },
+    "unattended": {
+     "cache_read": 152340,
+     "cache_write": 34771,
+     "input": 8,
+     "output": 779
+    }
+   },
+   "turns": {
+    "monitor": 1,
+    "owner": 1,
+    "unattended": 1
+   },
    "unattributed": {
-    "cache_read": 0,
-    "cache_write": 0,
-    "input": 0,
-    "output": 0
+    "cache_read": 203135,
+    "cache_write": 100489,
+    "input": 16,
+    "output": 3144
    }
   },
   "C": {
@@ -260,12 +286,14 @@
    "first_week": "2026-W42",
    "friction": {
     "interrupts": 0,
-    "prompts": 1,
+    "prompts": 3,
     "rejected": 0,
     "swear": 0
    },
    "involvement": {
     "lengths": [
+     2,
+     1028,
      10026
     ]
    },
@@ -373,16 +401,16 @@
    ],
    "split": {
     "direct": {
-     "cache_read": 10807621,
-     "cache_write": 215082,
-     "input": 78,
-     "output": 14865
+     "cache_read": 13736206,
+     "cache_write": 739341,
+     "input": 146,
+     "output": 32515
     },
     "helpers": {
-     "cache_read": 24501519,
-     "cache_write": 223427,
-     "input": 302,
-     "output": 81433
+     "cache_read": 28411577,
+     "cache_write": 369110,
+     "input": 386,
+     "output": 96359
     },
     "pipeline": {
      "cache_read": 1530995,
@@ -392,44 +420,44 @@
     }
    },
    "tests": {
-    "calls": 11,
+    "calls": 12,
     "tokens": {
-     "cache_read": 2019735,
-     "cache_write": 16990,
-     "input": 22,
-     "output": 4816
+     "cache_read": 2163755,
+     "cache_write": 18653,
+     "input": 24,
+     "output": 5110
     }
    },
    "tokens": {
     "on_call": {
-     "cache_read": 388548,
-     "cache_write": 13841,
-     "input": 6,
-     "output": 767
+     "cache_read": 5615737,
+     "cache_write": 442086,
+     "input": 118,
+     "output": 25496
     },
     "owner": {
-     "cache_read": 0,
-     "cache_write": 0,
-     "input": 0,
-     "output": 0
+     "cache_read": 222925,
+     "cache_write": 132759,
+     "input": 8,
+     "output": 809
     },
     "unattended": {
-     "cache_read": 36451587,
-     "cache_write": 510816,
-     "input": 430,
-     "output": 107259
+     "cache_read": 37840116,
+     "cache_write": 619754,
+     "input": 462,
+     "output": 114297
     }
    },
    "turns": {
-    "on_call": 1,
-    "owner": 1,
-    "unattended": 7
+    "on_call": 3,
+    "owner": 3,
+    "unattended": 10
    },
    "unattributed": {
-    "cache_read": 183819,
-    "cache_write": 184578,
-    "input": 4,
-    "output": 708
+    "cache_read": 7022462,
+    "cache_write": 854520,
+    "input": 156,
+    "output": 33284
    }
   }
  },
