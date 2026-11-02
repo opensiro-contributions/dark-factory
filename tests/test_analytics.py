@@ -719,21 +719,21 @@ class RenderTest(TempDirTest):
         self.assertIn("n/a", publish.pr_body(weeks, {"o/shop": "A"}))
 
     def test_leak_check_whole_word(self):
-        terms = render.clean_terms({"shop", "main", "ab", "Kids-CRM"})
-        self.assertEqual(terms, {"shop", "kids-crm"})
-        files = {"a.md": "Shop is here", "b.md": "a workshop", "c.md": "about kids-crm today"}
-        self.assertEqual(render.leak_check(files, terms), [("a.md", "shop"), ("c.md", "kids-crm")])
+        terms = render.clean_terms({"shop", "main", "ab", "Pet-Clinic"})
+        self.assertEqual(terms, {"shop", "pet-clinic"})
+        files = {"a.md": "Shop is here", "b.md": "a workshop", "c.md": "about pet-clinic today"}
+        self.assertEqual(render.leak_check(files, terms), [("a.md", "shop"), ("c.md", "pet-clinic")])
 
     def test_leak_terms_from_sources(self):
-        with mock.patch.object(codehost, "repo_of", return_value="acme/kids-crm"), \
+        with mock.patch.object(codehost, "repo_of", return_value="acme/pet-clinic"), \
                 mock.patch.object(render.socket, "gethostname", return_value="vps-123"):
-            terms = render.leak_terms([Path("/opt/clients/kids-crm")], [week_data(repos=("acme/kids-crm",))],
+            terms = render.leak_terms([Path("/opt/clients/pet-clinic")], [week_data(repos=("acme/pet-clinic",))],
                                       store.Settings(owner={"ruslan_trachuk"}), canon_repo="acme/dark-factory")
-        with mock.patch.object(codehost, "repo_of", return_value="acme/kids-crm"), \
+        with mock.patch.object(codehost, "repo_of", return_value="acme/pet-clinic"), \
                 mock.patch.object(render.socket, "gethostname", return_value="vps-123.example.net"):
             fqdn = render.leak_terms([], [], store.Settings())
         self.assertIn("vps-123", fqdn)
-        for t in ("kids-crm", "acme/kids-crm", "acme", "clients", "vps-123", "ruslan_trachuk", "shop-cart"):
+        for t in ("pet-clinic", "acme/pet-clinic", "acme", "clients", "vps-123", "ruslan_trachuk", "shop-cart"):
             self.assertIn(t, terms)
         self.assertNotIn("dark-factory", terms)
         self.assertNotIn("main", terms)
