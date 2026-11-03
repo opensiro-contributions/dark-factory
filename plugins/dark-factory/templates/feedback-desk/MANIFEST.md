@@ -79,11 +79,12 @@ the startup script.
   signals, the processed marker outside `/tmp`.
 - **The plugin directory is also passed via `--settings`.** `env` from `settings.local.json` overrides the process
   environment, so the directory is passed through `claude --settings '{"env":{…}}'` as well — that layer wins.
-- **Any `claude -p` or SDK process** on a machine with a user-level `plugin:telegram` brings the plugin up on its own
-  directory and evicts the reader of that directory: the On-call agent always has its own directory, and there must be
-  no token in the shared `~/.claude/channels/telegram`.
-- **A failed MCP server start is remembered by Claude Code for ~15 minutes** — a restart within that window does not
-  bring the plugin up; wait.
+- **The channel plugin is installed for the user but disabled; only the On-call enables it**, in its `--settings`
+  (`enabledPlugins`). A user-enabled plugin starts in every session on the machine — development sessions,
+  `claude -p`, SDK processes. Without a token it fails, and Claude Code remembers a failed MCP server start
+  machine-wide for ~15 minutes: an On-call starting in that window skips the plugin and is up but deaf. With a token
+  in the shared `~/.claude/channels/telegram` it would instead evict the reader of that directory. `check` warns
+  while the plugin is enabled user-wide.
 - **Second inbound channel: the prod monitor** (module prod-monitor). `DESK_MONITOR_MCP` in `config.env`. Claude Code
   registers a channel that is not an approved plugin only with `--dangerously-load-development-channels`, and that
   flag shows a confirmation dialog on every start; an unattended session in tmux has nobody to answer it. The other
@@ -130,8 +131,10 @@ does it while the agent copies and fills in files.
    unaccepted one to ship), and, if the project has a board, the allow rules of its create/update tools (`DESK_BOARD_TOOLS`). Deploy from the chat stays off (`DESK_DEPLOY_FROM_CHAT=off`) unless the owner explicitly accepts the
    risk (skill, section C).
 3. Appends the envelope rule (skill, section D) to the project's `CLAUDE.md` if it is not there.
-4. Runs `scripts/feedback-desk.sh check`: tmux, Bun, the `telegram@claude-plugins-official` plugin, the token file,
-   no `<…>` left, the allowlist. For a missing Bun or plugin it offers the install and waits for the "yes".
+4. Runs `scripts/feedback-desk.sh check`: tmux, Bun, the `telegram@claude-plugins-official` plugin (installed, but
+   disabled user-wide: `claude plugin disable telegram@claude-plugins-official --scope user`), the token file, no
+   `<…>` left, the allowlist. For a missing Bun or plugin, or a plugin still enabled user-wide, it offers the command
+   and waits for the "yes".
 5. **On a server the fleet provisions:** `fleet.py provision` (dry run first) writes `df-<slug>-desk.service` and the
    5-minute watch timer, which start the session; the project's checkout path is in
    `~/.config/dark-factory/projects`. Elsewhere: `scripts/feedback-desk.sh up` (attended: run it again after a

@@ -110,6 +110,14 @@ check() {
   [ -x "$BUN_BIN/bun" ] || { say "✗ no Bun in $BUN_BIN — channel plugins run on Bun: install it from https://bun.sh/docs/installation (a release zip checked against its SHASUMS256.txt, or your package manager)"; bad=$((bad + 1)); }
   claude plugin list 2>/dev/null | grep -q "${DESK_PLUGIN%%@*}" ||
     { say "✗ plugin $DESK_PLUGIN is not installed: claude plugin install $DESK_PLUGIN --scope user"; bad=$((bad + 1)); }
+  # Not a failure: up must still start. Every other session on the machine starts a user-enabled plugin, fails
+  # without a token, and Claude Code then skips the plugin machine-wide for ~15 minutes — an On-call starting
+  # in that window is up but deaf.
+  P="$DESK_PLUGIN" python3 -c 'import json, os, sys
+try: on = json.load(open(os.path.expanduser("~/.claude/settings.json"))).get("enabledPlugins", {}).get(os.environ["P"])
+except (OSError, ValueError, AttributeError): on = None
+sys.exit(0 if on is True else 1)' &&
+    say "! plugin $DESK_PLUGIN is enabled user-wide — turn it off: claude plugin disable $DESK_PLUGIN --scope user (the On-call enables it for itself)"
   grep -q '^TELEGRAM_BOT_TOKEN=.\+' "$DESK_STATE_DIR/.env" 2>/dev/null ||
     { say "✗ no bot token in $DESK_STATE_DIR/.env — the owner puts it there (feedback-desk skill, step 3)"; bad=$((bad + 1)); }
   [ "$bad" -eq 0 ] && say "✓ environment ready"
@@ -328,10 +336,11 @@ up() {
   # QUOTA_ROLE=desk: the quota guard (dark-factory plugin) never cuts off answering the client.
   # DF_UNATTENDED=1: nobody answers a permission dialog here, so the guard denies fence changes instead of asking.
   # DF_ROLE=on-call: the guard lets this session run a plain release and the accept/release wrapper, and nothing else.
+  # enabledPlugins: the channel plugin is off everywhere else (MANIFEST) and on only in this session.
   tmux new-session -d -s "$DESK_TMUX" -c "$DESK_WORKDIR" \
     env PATH="$BUN_BIN:$PATH" TELEGRAM_STATE_DIR="$DESK_STATE_DIR" QUOTA_ROLE=desk DF_UNATTENDED=1 DF_ROLE=on-call \
     claude --name "$DESK_NAME" --model "$DESK_MODEL" "${remote[@]}" \
-    --settings "{\"env\":{\"TELEGRAM_STATE_DIR\":\"$DESK_STATE_DIR\",\"QUOTA_ROLE\":\"desk\",\"DF_UNATTENDED\":\"1\",\"DF_ROLE\":\"on-call\"}}" \
+    --settings "{\"enabledPlugins\":{\"$DESK_PLUGIN\":true},\"env\":{\"TELEGRAM_STATE_DIR\":\"$DESK_STATE_DIR\",\"QUOTA_ROLE\":\"desk\",\"DF_UNATTENDED\":\"1\",\"DF_ROLE\":\"on-call\"}}" \
     --tools "$DESK_TOOLS" --permission-mode "$DESK_PERMISSION_MODE" \
     --allowedTools "$(desk_allow_rules)" "${disallowed[@]}" \
     --channels "plugin:$DESK_PLUGIN" "${monitor[@]}" \
