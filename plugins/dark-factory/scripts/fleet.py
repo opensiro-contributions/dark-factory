@@ -20,17 +20,17 @@ A project gets, on the server where this runs (user systemd units, survive a reb
     changes or on another branch) and runs the script (rebuild, migrate, restart, smoke). The sessions cannot do it:
     each works in its own worktree. A session spawned with --spawn same-dir would work in the stand's checkout: the
     updater then stops at "uncommitted changes";
-  - its daily vulnerability check, if the main checkout has a lock file (uv.lock, requirements*.txt,
-    package-lock.json, bun.lock) and session.env does not say VULN_CHECK=off: df-<slug>-vulns.timer runs
-    scripts/vulns.py at 05:40 UTC — the lock files of origin's default branch against the OSV database, one notice per
-    new finding, critical first;
 With FLEET_ANALYTICS_REPO=<checkout> in fleet.env, df-fleet-analytics.timer (Mondays 05:20 UTC) runs
 scripts/analytics.py: it counts the week's work of every project here and opens a draft PR with the numbers in that
 checkout's repository, for the owner to merge; without the setting the pair is removed.
 df-fleet-janitor.timer (daily, 06:30 UTC) runs `fleet.py janitor` over every project: the clean worktrees whose branch
 is merged go, then the local branches merged into origin's default branch that no worktree has checked out, then, for a
 project with a bd store, the review of its execution queue (scripts/triage.py): the report opens a review session
-(Remote Control, seen in claude.ai), and the owner's answer there closes or defers what it proposed.
+(Remote Control, seen in claude.ai), and the owner's answer there closes or defers what it proposed; and, for a project
+with a lock file (uv.lock, requirements*.txt, package-lock.json, bun.lock) unless session.env says VULN_CHECK=off, the
+vulnerability check (scripts/vulns.py): the lock files of origin's default branch and the newest release tag against
+the OSV database, one notice per new finding, a fix session for a critical one. One nightly pass: a new nightly check
+goes here, not into a timer of its own.
 The prod-monitor watchdog lives in cron (prod-monitor.sh install) and needs nothing here.
 For the owner's status page: `fleet.py feed` writes ~/.local/state/dark-factory/status.json
 (fleet_feed.py: per project working now, agents, waiting for quota, On-call and watchdog, last worked; quota from the
@@ -503,10 +503,8 @@ WantedBy=timers.target
 """
 
 
-# Once a day vulns.py checks what the project's lock files pin against the OSV database and tells the owner about new
-# findings. Only for a project with a lock file in its main checkout; VULN_CHECK=off in session.env turns it off.
-VULNS_AT = "*-*-* 05:40:00 UTC"
-VULNS_TIMEOUT = 15 * 60
+# The janitor runs vulns.py for every project with a lock file in its main checkout: what the lock files pin against
+# the OSV database, a notice per new finding, a fix session for a critical one. VULN_CHECK=off in session.env skips it.
 LOCKFILE_DEPTH = 3  # how deep under the checkout a lock file is looked for (backend/uv.lock, app/frontend/…)
 
 
@@ -526,42 +524,12 @@ def wants_vulns(p: Project) -> bool:
     return p.settings.get("VULN_CHECK", "").strip().lower() != "off" and has_lockfile(p)
 
 
-def vulns_service(p: Project) -> str:
-    words = [sys.executable, str(PLUGIN_LINK / "scripts/vulns.py"), str(p.path)]
-    return f"""[Unit]
-Description=dark factory: daily vulnerability check of {p.name}
-{ON_FAILURE}
-
-[Service]
-Type=oneshot
-TimeoutStartSec={VULNS_TIMEOUT}
-{unit_head(p)}
-ExecStart={" ".join(systemd_quote(w) for w in words)}
-"""
-
-
-def vulns_timer(p: Project) -> str:
-    return f"""[Unit]
-Description=dark factory: the daily vulnerability check of {p.name}
-
-[Timer]
-OnCalendar={VULNS_AT}
-RandomizedDelaySec=30min
-Persistent=true
-Unit={p.sock}-vulns.service
-
-[Install]
-WantedBy=timers.target
-"""
-
-
 UNIT_SUFFIXES = ("-session.service", "-rc.service", "-desk.service", "-desk-watch.service", "-desk-watch.timer",
-                 "-stand.service", "-stand.timer", "-vulns.service", "-vulns.timer")
+                 "-stand.service", "-stand.timer")
 STAND_SUFFIXES = ("-stand.timer", "-stand.service")
-VULNS_SUFFIXES = ("-vulns.timer", "-vulns.service")
-# Units an older release wrote, which provision and unprovision remove: the per-project queue review and the nightly
-# worktree clean-up are the janitor's now.
-OLD_SUFFIXES = ("-triage.timer", "-triage.service")
+# Units an older release wrote, which provision and unprovision remove: the per-project queue review, the vulnerability
+# check and the nightly worktree clean-up are the janitor's now.
+OLD_SUFFIXES = ("-triage.timer", "-triage.service", "-vulns.timer", "-vulns.service")
 
 # Server-wide units, written once for all projects. The notify template has no OnFailure of its own (no loop).
 NOTIFY_UNIT = f"{PREFIX}notify@.service"
@@ -659,7 +627,7 @@ OLD_SERVER_UNITS = (f"{PREFIX}fleet-gc.timer", f"{PREFIX}fleet-gc.service")
 
 def janitor_service(python: str, source: list[str]) -> str:
     return f"""[Unit]
-Description=dark factory: the janitor — merged worktrees and branches of every project, then the queue reviews
+Description=dark factory: the janitor — merged worktrees and branches of every project, then the queue reviews and vulnerability checks
 {ON_FAILURE}
 
 [Service]
@@ -804,9 +772,6 @@ def units_for(p: Project, claude: str, tmux: str) -> dict[str, str]:
     if p.stand.is_file():
         units[f"{p.sock}-stand.service"] = stand_service(p)
         units[f"{p.sock}-stand.timer"] = stand_timer(p)
-    if wants_vulns(p):
-        units[f"{p.sock}-vulns.service"] = vulns_service(p)
-        units[f"{p.sock}-vulns.timer"] = vulns_timer(p)
     return units
 
 
@@ -882,7 +847,6 @@ def provision(projects: list[Project], dry: bool, source: list[str] | None = Non
     stale += [*OLD_SERVER_UNITS, *(f"{p.sock}{s}" for p in projects for s in OLD_SUFFIXES)]
     stale += [n for n in FEED_UNITS if not feed_addr]  # FLEET_FEED_ADDR was removed: nothing listens
     stale += [f"{p.sock}{s}" for p in projects if not p.stand.is_file() for s in STAND_SUFFIXES]  # script gone
-    stale += [f"{p.sock}{s}" for p in projects if not wants_vulns(p) for s in VULNS_SUFFIXES]  # off, or no lock file
     bad |= remove_units([n for n in stale if (UNIT_DIR / n).exists()], dry)
     bad |= run(["systemctl", "--user", "daemon-reload"], dry)
     bad |= run(["systemctl", "--user", "enable", "--now", *names], dry)
@@ -1192,8 +1156,9 @@ def check_vulns(p: Project) -> tuple[bool, str] | None:
     """None when the project is not checked (no lock file, or VULN_CHECK=off). A known critical finding is ○."""
     if not wants_vulns(p):
         return None
-    if not (UNIT_DIR / f"{p.sock}-vulns.timer").exists():
-        return False, "lock files are there but the daily check is not provisioned (/dark-factory:provision-server)"
+    if not (UNIT_DIR / f"{FLEET_JANITOR}.timer").exists():
+        return False, "lock files are there but the janitor that checks them is not provisioned " \
+                      "(/dark-factory:provision-server)"
     try:
         latest = json.loads((p.path / ".claude/state/vulns/state.json").read_text()).get("latest", {})
     except (OSError, ValueError, AttributeError):
@@ -1504,15 +1469,18 @@ def hand_off(projects: list[Project], now: float) -> None:
 
 
 def janitor(projects: list[Project]) -> int:
-    """The daily clean-up: `gc --apply`, the leftovers handed to each development session, then the queue review of
-    every project with a bd store. A failed step does not stop the others; the unit fails at the end and OnFailure
-    tells the owner."""
+    """The nightly pass over every project: `gc --apply`, the leftovers handed to each development session, then per
+    project the queue review (a bd store) and the vulnerability check (a lock file, unless VULN_CHECK=off). A failed
+    step does not stop the others; the unit fails at the end and OnFailure tells the owner."""
     bad = gc(projects, apply=True)
     hand_off(projects, time.time())
     for p in projects:
         if has_queue(p):
             print(f"{p.name}: queue review", flush=True)
             bad |= subprocess.call([sys.executable, str(PLUGIN / "scripts/triage.py"), str(p.path)], cwd=p.path) != 0
+        if wants_vulns(p):
+            print(f"{p.name}: vulnerability check", flush=True)
+            bad |= subprocess.call([sys.executable, str(PLUGIN / "scripts/vulns.py"), str(p.path)], cwd=p.path) != 0
     return 1 if bad else 0
 
 

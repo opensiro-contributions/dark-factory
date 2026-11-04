@@ -30,15 +30,14 @@
   that closes its advisories at the threshold and up (trial: starlette 1.0.1 for the critical one, not 1.3.1).
 - **Release setting:** `VULN_RELEASE=accept|now` in `.claude/factory/session.env`; default `accept` (the safe one).
 - **Attempt limit:** 3 build-and-test rounds, then stop and notify.
-- **Schedule:** daily, a per-project `df-<slug>-vulns.timer` written by `fleet.py provision` for a project with lock
-  files, next to the janitor; a random delay so projects do not scan at the same minute.
+- **Schedule:** the nightly janitor (`fleet.py janitor`) runs it for every project with a lock file, after the queue review — one nightly pass, no timer of its own (owner, 2026-11-04; first built as a per-project timer).
 - **No new notification path.** Notices go through `fleet.py notify` (factory session / FLEET_NOTIFY_CMD / journal),
   the monitor's findings through its existing channel to the On-call.
 
 ## Flow
 
 ```
-df-<slug>-vulns.timer (daily)
+fleet.py janitor (nightly)
   └─ vulns.py <checkout>            no model: osv-scanner over lock files, Dockerfiles, workflow pins
        ├─ state: .claude/state/vulns/seen.json  — findings already reported or being fixed (no repeats)
        ├─ new non-critical / outdated  → one fleet notify, recorded as seen

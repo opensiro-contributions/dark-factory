@@ -3,7 +3,7 @@
 ## Phase 1 — see: daily scan and notices
 
 - [x] `vulns.py`: lock files of origin's default branch → OSV; severity + KEV → critical / other; seen-state
-- [x] `fleet.py provision`: `df-<slug>-vulns.timer` for a project with lock files; status line in `fleet.py status`
+- [x] run by the nightly janitor for a project with lock files (first a timer of its own, folded in); status line in `fleet.py status`
 - [x] notices through `fleet.py notify`, grouped by package, once per new finding, none on a quiet day
 - [x] tests for parsing, classification, seen-state, the quiet day, a broken lock file, OSV down
 - [ ] Dockerfile base images and GitHub Actions pins (OSV's package query does not cover them; carried over)

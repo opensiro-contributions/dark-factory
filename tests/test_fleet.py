@@ -191,24 +191,17 @@ class UnitsTest(unittest.TestCase):
         self.assertIn("Unit=df-shop-desk-watch.service", timer)
         self.assertIn("WantedBy=timers.target", timer)
 
-    def test_vulns_units_only_with_a_lock_file(self):
-        self.assertNotIn("df-shop-vulns.timer", fleet.units_for(self.p, "c", "t"))
+    def test_vulns_wanted_only_with_a_lock_file(self):
+        self.assertFalse(fleet.wants_vulns(self.p))
         (self.root / "shop/web/node_modules/x").mkdir(parents=True)
         (self.root / "shop/web/node_modules/x/package-lock.json").write_text("{}")  # a dependency's, not the project's
-        self.assertNotIn("df-shop-vulns.timer", fleet.units_for(self.p, "c", "t"))
+        self.assertFalse(fleet.wants_vulns(self.p))
         (self.root / "shop/backend").mkdir()
         (self.root / "shop/backend/uv.lock").write_text("version = 1\n")
-        units = fleet.units_for(self.p, "c", "t")
-        service, timer = units["df-shop-vulns.service"], units["df-shop-vulns.timer"]
-        self.assertIn('/scripts/vulns.py" "', service)
-        self.assertIn(f'"{self.root / "shop"}"', service)
-        self.assertIn("OnFailure=df-notify@%n.service", service)
-        self.assertNotIn("[Install]", service)
-        self.assertIn("OnCalendar=*-*-* 05:40:00 UTC", timer)
-        self.assertIn("Persistent=true", timer)
-        self.assertIn("Unit=df-shop-vulns.service", timer)
+        self.assertTrue(fleet.wants_vulns(self.p))
+        self.assertEqual(list(fleet.units_for(self.p, "c", "t")), ["df-shop-session.service", "df-shop-rc.service"])
         self.p.settings["VULN_CHECK"] = "off"
-        self.assertNotIn("df-shop-vulns.timer", fleet.units_for(self.p, "c", "t"))
+        self.assertFalse(fleet.wants_vulns(self.p))
 
     def test_vulns_status_line(self):
         self.assertIsNone(fleet.check_vulns(self.p))  # no lock file, no line
@@ -218,7 +211,7 @@ class UnitsTest(unittest.TestCase):
             self.assertFalse(ok)
             self.assertIn("not provisioned", text)
             (self.root / "units").mkdir()
-            (self.root / "units/df-shop-vulns.timer").write_text("")
+            (self.root / "units/df-fleet-janitor.timer").write_text("")
             self.assertEqual(fleet.check_vulns(self.p), (True, "no check recorded yet"))
             state = self.root / "shop/.claude/state/vulns/state.json"
             state.parent.mkdir(parents=True)
@@ -307,7 +300,8 @@ class UnitsTest(unittest.TestCase):
 
     def test_removes_the_units_the_janitor_replaced(self):
         (self.root / "units").mkdir(parents=True, exist_ok=True)
-        old = ("df-fleet-gc.service", "df-fleet-gc.timer", "df-shop-triage.service", "df-shop-triage.timer")
+        old = ("df-fleet-gc.service", "df-fleet-gc.timer", "df-shop-triage.service", "df-shop-triage.timer",
+               "df-shop-vulns.service", "df-shop-vulns.timer")
         for n in old:
             (self.root / "units" / n).write_text("")
         code, out, _ = self.provision([self.p], dry=False)
@@ -316,6 +310,7 @@ class UnitsTest(unittest.TestCase):
         disable = next(ln for ln in out.splitlines() if " disable --now " in ln)
         self.assertIn("df-fleet-gc.timer", disable)
         self.assertIn("df-shop-triage.timer", disable)
+        self.assertIn("df-shop-vulns.timer", disable)
 
     def test_writes_analytics_pair_with_the_setting(self):
         code, out, _ = self.provision([self.p], dry=False, fleet_env='FLEET_ANALYTICS_REPO="/srv/canon"\n')
@@ -821,6 +816,20 @@ class WorktreeTest(unittest.TestCase):
         self.assertEqual(len(calls), 1)
         self.assertTrue(calls[0][0][1].endswith("scripts/triage.py"))
         self.assertEqual((calls[0][0][2], calls[0][1]), (str(self.repo), self.repo))
+
+    def test_janitor_checks_vulnerabilities_after_the_queue(self):
+        (self.repo / ".beads").mkdir()
+        (self.repo / ".beads/metadata.json").write_text("{}")
+        (self.repo / "uv.lock").write_text("version = 1\n")
+        calls = []
+        with mock.patch.object(fleet, "busy_paths", return_value=[]), redirect_stdout(io.StringIO()), \
+                mock.patch.object(fleet.subprocess, "call", lambda cmd, cwd: calls.append(cmd[1]) or 0):
+            self.assertEqual(fleet.janitor([self.p]), 0)
+            self.assertEqual([Path(c).name for c in calls], ["triage.py", "vulns.py"])
+            self.p.settings["VULN_CHECK"] = "off"
+            calls.clear()
+            fleet.janitor([self.p])
+            self.assertEqual([Path(c).name for c in calls], ["triage.py"])
 
 
 class DriftTest(unittest.TestCase):
