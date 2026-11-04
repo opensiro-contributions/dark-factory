@@ -7,6 +7,8 @@
 - [x] notices through `fleet.py notify`, grouped by package, once per new finding, none on a quiet day
 - [x] tests for parsing, classification, seen-state, the quiet day, a broken lock file, OSV down
 - [ ] Dockerfile base images and GitHub Actions pins (OSV's package query does not cover them; carried over)
+- [ ] versions merely behind, with no known vulnerability: one notice (asked for at the start; not built)
+- [x] the `/dark-factory:vulns` skill: check and fix in any session; the nightly fix session follows it
 
 ## Phase 2 — fix: critical and controlled
 

@@ -3,94 +3,78 @@
 ## Decided by the owner
 
 1. **Scope rule = control.** What the project's repository pins is the factory's to fix; what it does not control is
-   only reported. Layer does not matter (a base image the project's Dockerfile names is "controlled"; the hosting's
-   OpenSSL is not).
-2. **Auto-fix only for critical.** Everything else informs and never forces.
+   only reported.
+2. **Auto-fix from a threshold:** critical by default; high, moderate or low by the project's setting
+   (`VULN_AUTOFIX_MIN`). Below it a finding informs and is never forced.
 3. **When tests break, the agent adapts the code** to the new version and re-runs the tests.
-4. **Release after the fix is per project:** through acceptance on the dev stand, or at once.
+4. **Release after the fix is per project** (`VULN_RELEASE`): through acceptance on the dev stand, or at once.
 5. **The full automated test suite is mandatory** on every path. No setting turns it off.
-6. **A release stays a human decision** (owner, 2026-11-04, option b). For `VULN_RELEASE=now` the factory prepares the
-   security release and asks once; it never tags on its own. The fences get no exception.
-7. **Only what the code declares is watched.** The product has no access to production machines; no OS package
-   collection, no external probing. Production = the last release tag, scanned like main.
+6. **A release stays a human decision.** With `VULN_RELEASE=now` the release question is the guard's permission dialog
+   for `release.sh --security`; the factory never tags on its own. The fences get no exception.
+7. **Only what the code declares is watched.** No access to production machines: no OS package collection, no external
+   probing. Production = the newest release tag, scanned like main.
+8. **One nightly pass.** The check runs inside the janitor, not on a timer of its own; a new nightly check joins it.
+9. **One text for the fix steps:** the `/dark-factory:vulns` skill, used by a person's session and the nightly fix
+   session alike.
 
-## Decided by the builder (Claude) — the owner can override
+## Decided by the builder — the owner can override
 
 - **Scanner: the OSV API directly** (`api.osv.dev` querybatch + vuln details), lock files read by `vulns.py` itself
-  (stdlib only: uv.lock, requirements*.txt `==` pins, package-lock.json, bun.lock). Changed during phase 1 from the
-  osv-scanner binary: nothing to install on the server (the kit's requirements stay as they are), and a downloaded
-  binary is code from outside that the session may not run. Seam: `parse_lockfile` + `lookup`; another stack adds a
-  reader, no adapter layer. Severity is the GitHub advisory's (`database_specific.severity`); a PYSEC/CVE id that
-  aliases a GHSA collapses into it.
-- **Notices group by package version** ("pypdf 6.21.2 → 6.21.4: 7 advisories"): one upgrade closes them together;
-  the first run on a real project listed 85 advisories in 20 packages.
-- **"Critical"** = an advisory with severity CRITICAL (CVSS ≥ 9.0), or any severity listed in CISA's Known Exploited
-  Vulnerabilities catalogue. Project setting `VULN_AUTOFIX_MIN=critical` (default; owner 2026-11-04: critical by
-  default, the other levels — high, moderate, low — by the project's setting). A fix raises a package to the version
-  that closes its advisories at the threshold and up (trial: starlette 1.0.1 for the critical one, not 1.3.1).
-- **Release setting:** `VULN_RELEASE=accept|now` in `.claude/factory/session.env`; default `accept` (the safe one).
-- **Attempt limit:** 3 build-and-test rounds, then stop and notify.
-- **Schedule:** the nightly janitor (`fleet.py janitor`) runs it for every project with a lock file, after the queue review — one nightly pass, no timer of its own (owner, 2026-11-04; first built as a per-project timer).
-- **No new notification path.** Notices go through `fleet.py notify` (factory session / FLEET_NOTIFY_CMD / journal),
-  the monitor's findings through its existing channel to the On-call.
+  (stdlib only: uv.lock, requirements*.txt `==` pins, package-lock.json, bun.lock). Not the osv-scanner binary: nothing
+  to install, and a downloaded binary is code from outside that a session may not run. Seam: `parse_lockfile` +
+  `lookup`; another stack adds a reader, no adapter layer.
+- **Severity** is the GitHub advisory's (`database_specific.severity`); a PYSEC/CVE id that aliases a GHSA collapses
+  into it. A CVE in CISA's known-exploited catalogue makes any severity critical.
+- **The fix version** is the one on the release line the pinned version is in (`introduced ≤ pinned < fixed`); for a
+  package the notice shows the highest of those across its advisories, the fix session the highest across the
+  advisories at or above the threshold.
+- **Notices group by package version** ("pypdf 6.21.2 → 6.21.4: 7 advisories"): one upgrade closes them together.
+- **Defaults:** `VULN_RELEASE=accept`, `VULN_FIX` on, `VULN_CHECK` on; attempt limit 3 gate rounds.
+- **No new notification path.** Notices and the fix session's report go through `fleet.py notify`.
+- **No incident through the On-call:** it speaks in the client chat, where an open vulnerability must not be announced.
 
 ## Flow
 
 ```
-fleet.py janitor (nightly)
-  └─ vulns.py <checkout>            no model: osv-scanner over lock files, Dockerfiles, workflow pins
-       ├─ state: .claude/state/vulns/seen.json  — findings already reported or being fixed (no repeats)
-       ├─ new non-critical / outdated  → one fleet notify, recorded as seen
-       └─ new critical + controlled    → bd task (label security) + a fix session
-             fix session = a Claude session with Remote Control in its own worktree (like the triage review),
-             one builder with the build-tdd / integrate / wrap skills, spend cap:
-               branch fix/<ID>-<slug> → raise the version → full gate → adapt code ≤ 3 rounds
-               → merge-feature.sh (CI green) → then by VULN_RELEASE:
-                    accept: dev stand updates itself (stand timer); waits for a yes
-                    now:    ask the owner / On-call "security fix ready, release?" → on yes:
-                            release.sh --security <PR>  (below), run by whoever may release
-               stuck → stop, fleet notify with branch + failure; task stays open
+fleet.py janitor (nightly): gc → hand-off → per project: queue review, then
+  vulns.py <checkout>               no model: lock files of origin/main and the newest release tag → OSV + CISA
+       ├─ state: .claude/state/vulns/state.json — findings told, findings handed to a fix session, the latest run
+       ├─ new finding below the threshold → one fleet notify, recorded as told
+       └─ new finding at/above it on main → one fix session, unless one runs (closed after 24 h)
+             = a Claude session with Remote Control in its own worktree (tmux `vulnfix` in df-<slug>), the project's
+               permission mode, started without a shell; first message: the findings as data
+             follows /dark-factory:vulns, section Fix:
+               bd bug → fix/ branch → raise versions → full gate, adapt code ≤ 3 rounds → reviewer
+               → merge-feature.sh (CI green) → by VULN_RELEASE:
+                    accept: the dev stand follows main; waits for acceptance
+                    now:    release.sh --security <PR>; the guard asks the owner
+               stuck → draft PR, stop; report with `vulns.py tell`
 ```
 
-### Security release (`VULN_RELEASE=now`, on a human's yes)
+### Security release (`release.sh --security <PR>`)
 
-`release.sh` today tags `origin/main` and refuses while any merge since the last tag lacks `accepted`. A security
-release must not carry those merges, so `release.sh --security <PR>`:
+- builds on the newest release tag on the remote, an earlier security release included (it is not on main; building on
+  main's last tag would drop that earlier fix from production);
+- cherry-picks the PR's merge (`-m 1` for a merge commit), tags the next `vYYYY.MM.DD.N`; the release workflow runs the
+  same tests on that commit before `--publish`;
+- the tag note says "Security release: <base> + the fix of PR #N only; acceptance of the fix skipped by the project's
+  VULN_RELEASE=now"; the PR gets the label `accepted` with that note, so the next normal release counts it;
+- refused before the first release, for a PR not on main, and when the fix does not apply on its own (it builds on
+  unreleased work): then it goes the normal way;
+- the guard treats it as its own release decision: asked where a human answers, denied in launched agents.
 
-- cuts a branch from the last `v*` tag, cherry-picks the fix's merge, tags it `vYYYY.MM.DD.N` as usual;
-- the release workflow runs the same light + heavy tests on that commit before `--publish`;
-- the tag annotation and release notes say "security release: <advisory id>, fix PR #N, acceptance skipped by project
-  setting";
-- the next normal release from main contains the fix anyway (it is on main), so nothing diverges.
+### Settled after the builder check
 
-Refused when the cherry-pick conflicts: then the fix waits for the normal path and the owner is told.
+- **Fenced files are report-only.** A fix that needs a file the guard protects (`.github/workflows/release.yml`,
+  `scripts/{merge-feature,release}.sh`, `.claude/settings*.json`, `.claude/fences.env`, `.githooks/`) stops and asks
+  the owner. No exception to the fences.
+- **Team level.** At `FENCE_LEVEL=team` the fix PR still needs the GitHub approval `merge-feature.sh` requires.
+- **The reviewer pass** before the merge is part of the fix steps (one `dark-factory:reviewer` run).
 
-### Production
+## Evidence
 
-The scan runs over two trees: `origin/main` and the last `v*` release tag (what the hosting builds from `release`).
-A critical finding present in the release tag also raises an incident through the prod-monitor → On-call chain when
-the project has that module (otherwise the owner notice says "in production"). Nothing reads or probes production
-itself.
-
-### Settled after the builder check (builder's calls)
-
-- **Acceptance state after a security release.** The fix PR gets the label `accepted` with the comment "shipped in
-  security release vX, acceptance skipped by the project's VULN_RELEASE=now"; the next normal release from main then
-  counts it as accepted. The project chose to skip acceptance for these fixes, so this records that choice, not a yes.
-- **Fenced files are report-only.** A critical finding whose fix needs a file the guard protects (`.github/workflows/*`
-  used by release, `scripts/{merge-feature,release,feedback-desk}.sh`, …) is not auto-fixed: the owner is told, the fix
-  needs their permission dialog. vuln-watch adds no exception to the fences for these files.
-- **Team level.** At `FENCE_LEVEL=team` the fix PR still needs the GitHub approval `merge-feature.sh` requires; the
-  fix session stops at "waiting for approval" and the owner is told. No bypass.
-
-## Left to the builder
-
-- How the fix session is started (reuse the triage review-session launcher or the feature-lite entry).
-- The exact OSV / KEV caching and how often the DB is refreshed.
-- How "outdated" is computed per ecosystem, and a sane limit on how many outdated packages one notice lists.
-- Wording of the notices.
-
-## Open for the owner
-
-- Whether an auto-merged security fix also needs the reviewer agent's pass before merge (the default here: yes, the
-  same single reviewer feature-lite runs).
+- A live trial on one of the owner's projects: 29 advisories, 5 critical, all in production. The fix session raised four
+  packages (and the web framework one of them required), regenerated the API client types, passed the full suite first
+  time (943 tests), got a clean review and merged on green CI in 16 minutes; the dev stand followed.
+- The skill against a no-skill baseline on the same scenario: without it an agent fixed below-threshold packages, merged
+  a partial fix and invented a release rule; with it, it fixed only the critical ones and stopped after 3 red rounds.
