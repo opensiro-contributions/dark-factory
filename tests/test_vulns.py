@@ -338,6 +338,23 @@ class RunTest(unittest.TestCase):
         self.assertEqual(quiet(vulns.check, repo.path, FakeNet()), 0)
         self.assertEqual(vulns.read_state(repo.path)["latest"]["text"], "no lock files on origin/main")
 
+    def test_every_level_can_be_the_threshold(self):
+        for level, critical in (("moderate", 2), ("low", 2), ("nonsense", 1)):
+            env = self.p / ".claude/factory/session.env"
+            env.parent.mkdir(parents=True, exist_ok=True)
+            env.write_text(f'VULN_AUTOFIX_MIN="{level}"\n')
+            self.run_check()
+            self.assertEqual(vulns.read_state(self.p)["latest"]["critical"], critical, level)
+
+    def test_critical_counts_main_and_production_apart(self):
+        git(self.repo.work, "tag", "v2026.11.01.1")
+        git(self.repo.work, "push", "-q", "origin", "v2026.11.01.1")
+        self.repo.commit({"backend/uv.lock": UV_LOCK.replace("2.4.1", "3.1.6")})  # fixed on main, not released
+        self.run_check()
+        latest = vulns.read_state(self.p)["latest"]
+        self.assertEqual((latest["critical"], latest["critical_main"], latest["critical_prod"]), (1, 0, 1))
+        self.assertIn("critical: 0 on main, 1 in production", latest["text"])
+
     def test_min_level_from_session_env(self):
         env = self.p / ".claude/factory/session.env"
         env.parent.mkdir(parents=True)

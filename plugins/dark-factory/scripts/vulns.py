@@ -28,7 +28,9 @@ every day.
   vulns.py tell "<message>"   one message to the owner (the fix session reports with it)
 
 Settings, from <project>/.claude/factory/session.env:
-  VULN_AUTOFIX_MIN=critical|high   the severity from which a finding counts as critical (default critical)
+  VULN_AUTOFIX_MIN=critical|high|moderate|low
+                                   the severity from which the factory fixes a finding itself (default critical); the
+                                   fix raises a package to the version that closes its advisories at that level and up
   VULN_FIX=off                     tell only, open no fix session
   VULN_RELEASE=accept|now          after the merge: wait for acceptance on the dev stand (default), or ask the owner
                                    for a security release of the last release plus the fix
@@ -410,14 +412,15 @@ def check(project: Path, net=http_json, dry: bool = False) -> int:
     session = {"at": str(state.get("fix_session_at", ""))}  # when the fix session that may still run was opened
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
-    def save(ok: bool, text: str, total: int = 0, critical: int = 0) -> int:
+    def save(ok: bool, text: str, total: int = 0, critical: int = 0, on_main: int = 0, in_prod: int = 0) -> int:
         print(text)
         if dry:
             return 0
         f = state_file(project)
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps({"seen": seen, "fix": fixing, "fix_session_at": session["at"],
-                                 "latest": {"ok": ok, "text": text, "total": total, "critical": critical, "at": now}},
+                                 "latest": {"ok": ok, "text": text, "total": total, "critical": critical,
+                                            "critical_main": on_main, "critical_prod": in_prod, "at": now}},
                                 ensure_ascii=False, indent=1))
         return 0
 
@@ -435,7 +438,7 @@ def check(project: Path, net=http_json, dry: bool = False) -> int:
         return save(not broken, f"no lock files on {ref}" if not broken else f"nothing read on {ref}{unread}")
     conf = settings(project)
     min_level = conf.get("VULN_AUTOFIX_MIN", "critical").strip().lower()
-    if min_level not in ("critical", "high"):
+    if min_level not in LEVELS:
         min_level = "critical"
     try:
         found = lookup(packages, net, min_level)
@@ -459,8 +462,12 @@ def check(project: Path, net=http_json, dry: bool = False) -> int:
             opened = True
             fixing.update({finding_key(f): now for f in to_fix})
             session["at"] = now
-    prod_note = f", {sum(f['prod'] for f in found)} in production ({tag})" if tag and found else ""
-    summary = (f"{len(found)} known ({crit} critical{prod_note}), {len(new)} new · "
+    crit_main = sum(f["critical"] and f["main"] for f in found)
+    crit_prod = sum(f["critical"] and f["prod"] for f in found)
+    split = (f"critical: {crit_main} on main, {crit_prod} in production ({tag})"
+             + (" — fixed on main, needs a release" if crit_prod and not crit_main else "")) if tag else \
+        f"critical: {crit_main}"
+    summary = (f"{len(found)} known, {split}; {len(new)} new · "
                f"{len(on_main | in_prod)} packages{unread}") if found else \
         f"none known on {ref}{f' or {tag}' if tag else ''} · {len(on_main | in_prod)} packages{unread}"
     if new:
@@ -475,7 +482,7 @@ def check(project: Path, net=http_json, dry: bool = False) -> int:
     keys = {finding_key(f) for f in found}
     seen = {k: v for k, v in seen.items() if k in keys}  # fixed ones may come back
     fixing = {k: v for k, v in fixing.items() if k in keys}
-    return save(not broken, summary, len(found), crit)
+    return save(not broken, summary, len(found), crit, crit_main, crit_prod)
 
 
 def main(argv: list[str]) -> int:

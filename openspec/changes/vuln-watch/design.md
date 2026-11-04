@@ -25,7 +25,9 @@
 - **Notices group by package version** ("pypdf 6.21.2 → 6.21.4: 7 advisories"): one upgrade closes them together;
   the first run on a real project listed 85 advisories in 20 packages.
 - **"Critical"** = an advisory with severity CRITICAL (CVSS ≥ 9.0), or any severity listed in CISA's Known Exploited
-  Vulnerabilities catalogue. Project setting `VULN_AUTOFIX_MIN=critical` (`high` allowed for a stricter project).
+  Vulnerabilities catalogue. Project setting `VULN_AUTOFIX_MIN=critical` (default; owner 2026-11-04: critical by
+  default, the other levels — high, moderate, low — by the project's setting). A fix raises a package to the version
+  that closes its advisories at the threshold and up (trial: starlette 1.0.1 for the critical one, not 1.3.1).
 - **Release setting:** `VULN_RELEASE=accept|now` in `.claude/factory/session.env`; default `accept` (the safe one).
 - **Attempt limit:** 3 build-and-test rounds, then stop and notify.
 - **Schedule:** daily, a per-project `df-<slug>-vulns.timer` written by `fleet.py provision` for a project with lock
