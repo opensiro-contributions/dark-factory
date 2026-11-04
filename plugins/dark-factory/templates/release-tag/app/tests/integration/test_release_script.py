@@ -689,3 +689,105 @@ def test_a_flag_is_never_taken_as_an_option_value(clone: Path, args: tuple[str, 
 
     assert result.returncode == 2
     assert _remote_tags(clone) == []
+
+
+# --- security release: the last release plus one fix, on a human's yes ---------------------
+
+
+def _tree(clone: Path, ref: str) -> list[str]:
+    return _git(clone, "ls-tree", "--name-only", ref).splitlines()
+
+
+def test_security_release_ships_the_last_release_plus_the_fix_only(clone: Path) -> None:
+    _pr_merge(clone, 11, "Voice input", ("accepted",))
+    assert _release(clone).returncode == 0
+    _pr_merge(clone, 12, "Dark theme")  # merged, waiting for acceptance
+    _pr_merge(clone, 13, "fix: raise pyjwt to 2.15.0 (GHSA-ffc3)")
+
+    result = _release(clone, "--security", "13")
+
+    assert result.returncode == 0, result.stderr
+    tag = f"v{DAY}.2"
+    assert _remote_tags(clone) == [f"v{DAY}.1", tag]
+    files = _tree(clone, tag)
+    assert "pr13.txt" in files and "pr11.txt" in files
+    assert "pr12.txt" not in files  # the unaccepted feature stays out
+    note = _git(clone, "tag", "-l", "--format=%(contents)", tag)
+    assert "Security release" in note and "#13" in note
+    calls = _gh_calls(clone)
+    assert "pr edit 13 --add-label accepted" in calls
+    assert any(c.startswith("pr comment 13 ") and "security release" in c for c in calls)
+    assert not any(c.startswith("pr edit 12") for c in calls)
+
+
+def test_security_release_publishes_like_any_tag(clone: Path) -> None:
+    _pr_merge(clone, 11, "Voice input", ("accepted",))
+    assert _release(clone).returncode == 0
+    assert _release(clone, "--publish", f"v{DAY}.1").returncode == 0
+    _pr_merge(clone, 13, "fix: raise certifi")
+    assert _release(clone, "--security", "13").returncode == 0
+
+    result = _release(clone, "--publish", f"v{DAY}.2")
+
+    assert result.returncode == 0, result.stderr
+    assert _remote_release_version(clone).startswith(f"v{DAY}.2 (")
+
+
+def test_security_release_needs_a_release_to_build_on(clone: Path) -> None:
+    _pr_merge(clone, 13, "fix: raise certifi")
+
+    result = _release(clone, "--security", "13")
+
+    assert result.returncode == 1
+    assert "no release yet" in result.stderr
+    assert _remote_tags(clone) == []
+
+
+def test_security_release_refuses_a_pr_not_on_main(clone: Path) -> None:
+    assert _release(clone).returncode == 0
+
+    result = _release(clone, "--security", "99")
+
+    assert result.returncode == 1
+    assert "#99" in result.stderr
+    assert _remote_tags(clone) == [f"v{DAY}.1"]
+
+
+def test_security_release_refuses_when_the_fix_does_not_apply(clone: Path) -> None:
+    assert _release(clone).returncode == 0
+    (clone / "shared.txt").write_text("feature\n")
+    _git(clone, "add", ".")
+    _git(clone, "commit", "-q", "-m", "Feature (#12)")
+    _git(clone, "push", "-q", "origin", "main")
+    (clone / "shared.txt").write_text("feature + fix\n")  # the fix edits what the unreleased feature added
+    _git(clone, "add", ".")
+    _git(clone, "commit", "-q", "-m", "fix: security (#13)")
+    _git(clone, "push", "-q", "origin", "main")
+
+    result = _release(clone, "--security", "13")
+
+    assert result.returncode == 1
+    assert "does not apply" in result.stderr
+    assert _remote_tags(clone) == [f"v{DAY}.1"]
+    assert _git(clone, "worktree", "list").count("\n") == 0  # the temporary worktree is gone
+
+
+def test_a_second_security_release_keeps_the_first_fix(clone: Path) -> None:
+    _pr_merge(clone, 11, "Voice input", ("accepted",))
+    assert _release(clone).returncode == 0
+    _pr_merge(clone, 12, "Dark theme")  # waiting for acceptance
+    _pr_merge(clone, 13, "fix: raise certifi")
+    assert _release(clone, "--security", "13").returncode == 0
+    _pr_merge(clone, 14, "fix: raise pyjwt")
+
+    result = _release(clone, "--security", "14")
+
+    assert result.returncode == 0, result.stderr
+    files = _tree(clone, f"v{DAY}.3")
+    assert "pr13.txt" in files and "pr14.txt" in files  # the first fix stays in production
+    assert "pr12.txt" not in files
+
+
+@pytest.mark.parametrize("args", [("--security",), ("--security", "x13"), ("--security", "13", "14")])
+def test_security_release_needs_one_pr_number(clone: Path, args: tuple[str, ...]) -> None:
+    assert _release(clone, *args).returncode == 2

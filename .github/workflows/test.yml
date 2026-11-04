@@ -46,6 +46,7 @@ jobs:
           python3 tests/test_analytics.py
           python3 tests/test_feedback_desk.py
           python3 tests/test_triage.py
+          python3 tests/test_vulns.py
 
       - name: Repository wiring (stdlib)
         run: python3 scripts/test_repo.py

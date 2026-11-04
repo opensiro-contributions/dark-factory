@@ -18,6 +18,11 @@ for it: nothing is collected, there is no telemetry, and no data is sent to the 
   production monitor reads a snapshot through a read-only database role you create and posts to that chat; the board is
   Linear through its own MCP server. Each one reaches only its own service, with credentials you give it.
 
+- **The vulnerability database.** Once a day `vulns.py` sends the names and versions of the packages a project's lock
+  files pin (nothing else: no code, no file names) to the public OSV API (`api.osv.dev`, run by Google), and downloads
+  CISA's public catalogue of known exploited vulnerabilities. `VULN_CHECK=off` in the project's
+  `.claude/factory/session.env` turns it off.
+
 - **Your phone, if you set up the status page.** With `FLEET_FEED_ADDR` in the server's `fleet.env`, `fleet.py serve`
   serves a status feed on that address (`/status.json`, and `/events` pushing every change): project names, whether
   their sessions and agents are working, the On-call and watchdog state, the quota numbers, and the link to each

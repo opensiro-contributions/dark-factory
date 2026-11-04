@@ -1220,6 +1220,7 @@ class ReleaseDecisionTest(unittest.TestCase):
         ("scripts/release.sh --owner-accepts", guard.RELEASE_OWNER),
         ("scripts/release.sh --include-unaccepted 'Vlad (tg 5), https://t.me/c/1/2'", guard.RELEASE_INCLUDE),
         ("scripts/release.sh --manual --reason x --by Ann", guard.RELEASE_MANUAL),
+        ("scripts/release.sh --security 13", guard.RELEASE_SECURITY),
         ("cd /x && nohup scripts/release.sh", guard.RELEASE),
         ("bash -c 'scripts/release.sh'", guard.RELEASE),
         ("scripts/feedback-desk.sh release", guard.RELEASE),

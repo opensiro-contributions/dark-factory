@@ -20,6 +20,10 @@ A project gets, on the server where this runs (user systemd units, survive a reb
     changes or on another branch) and runs the script (rebuild, migrate, restart, smoke). The sessions cannot do it:
     each works in its own worktree. A session spawned with --spawn same-dir would work in the stand's checkout: the
     updater then stops at "uncommitted changes";
+  - its daily vulnerability check, if the main checkout has a lock file (uv.lock, requirements*.txt,
+    package-lock.json, bun.lock) and session.env does not say VULN_CHECK=off: df-<slug>-vulns.timer runs
+    scripts/vulns.py at 05:40 UTC — the lock files of origin's default branch against the OSV database, one notice per
+    new finding, critical first;
 With FLEET_ANALYTICS_REPO=<checkout> in fleet.env, df-fleet-analytics.timer (Mondays 05:20 UTC) runs
 scripts/analytics.py: it counts the week's work of every project here and opens a draft PR with the numbers in that
 checkout's repository, for the owner to merge; without the setting the pair is removed.
@@ -90,6 +94,12 @@ Per-project settings (optional), <project>/.claude/factory/session.env:
       Anything else (bypassPermissions, --dangerously-*, other flags) refuses to provision that project:
       the file is project-local and its value lands in a systemd ExecStart.
   JANITOR_HANDOFF=off            the janitor does not hand this project's leftovers to its development session
+  VULN_CHECK=off                 no daily vulnerability check (it sends package names and versions to api.osv.dev)
+  VULN_AUTOFIX_MIN=high          fixed by the factory from this severity up: critical (default), high, moderate, low;
+                                 below it a finding is only told
+  VULN_FIX=off                   tell about critical findings, open no fix session
+  VULN_RELEASE=now               after a security fix is merged, ask the owner for a security release (the last
+                                 release plus the fix) instead of waiting for acceptance on the dev stand
 
 Options: --projects FILE, --registry PATH (default: $FACTORY_REGISTRY or ./registry.md), --project NAME,
 --stale-days N (a worktree with no commit for N days is reported as stale; default 14).
@@ -493,9 +503,62 @@ WantedBy=timers.target
 """
 
 
+# Once a day vulns.py checks what the project's lock files pin against the OSV database and tells the owner about new
+# findings. Only for a project with a lock file in its main checkout; VULN_CHECK=off in session.env turns it off.
+VULNS_AT = "*-*-* 05:40:00 UTC"
+VULNS_TIMEOUT = 15 * 60
+LOCKFILE_DEPTH = 3  # how deep under the checkout a lock file is looked for (backend/uv.lock, app/frontend/…)
+
+
+def has_lockfile(p: Project) -> bool:
+    from vulns import is_lockfile
+    for root, dirs, files in os.walk(p.path):
+        rel = Path(root).relative_to(p.path)
+        # node_modules holds the dependencies' own lock files; dot directories hold worktrees and virtualenvs
+        dirs[:] = [] if len(rel.parts) >= LOCKFILE_DEPTH else \
+            [d for d in dirs if not d.startswith(".") and d != "node_modules"]
+        if any(is_lockfile((rel / f).as_posix()) for f in files):
+            return True
+    return False
+
+
+def wants_vulns(p: Project) -> bool:
+    return p.settings.get("VULN_CHECK", "").strip().lower() != "off" and has_lockfile(p)
+
+
+def vulns_service(p: Project) -> str:
+    words = [sys.executable, str(PLUGIN_LINK / "scripts/vulns.py"), str(p.path)]
+    return f"""[Unit]
+Description=dark factory: daily vulnerability check of {p.name}
+{ON_FAILURE}
+
+[Service]
+Type=oneshot
+TimeoutStartSec={VULNS_TIMEOUT}
+{unit_head(p)}
+ExecStart={" ".join(systemd_quote(w) for w in words)}
+"""
+
+
+def vulns_timer(p: Project) -> str:
+    return f"""[Unit]
+Description=dark factory: the daily vulnerability check of {p.name}
+
+[Timer]
+OnCalendar={VULNS_AT}
+RandomizedDelaySec=30min
+Persistent=true
+Unit={p.sock}-vulns.service
+
+[Install]
+WantedBy=timers.target
+"""
+
+
 UNIT_SUFFIXES = ("-session.service", "-rc.service", "-desk.service", "-desk-watch.service", "-desk-watch.timer",
-                 "-stand.service", "-stand.timer")
+                 "-stand.service", "-stand.timer", "-vulns.service", "-vulns.timer")
 STAND_SUFFIXES = ("-stand.timer", "-stand.service")
+VULNS_SUFFIXES = ("-vulns.timer", "-vulns.service")
 # Units an older release wrote, which provision and unprovision remove: the per-project queue review and the nightly
 # worktree clean-up are the janitor's now.
 OLD_SUFFIXES = ("-triage.timer", "-triage.service")
@@ -741,6 +804,9 @@ def units_for(p: Project, claude: str, tmux: str) -> dict[str, str]:
     if p.stand.is_file():
         units[f"{p.sock}-stand.service"] = stand_service(p)
         units[f"{p.sock}-stand.timer"] = stand_timer(p)
+    if wants_vulns(p):
+        units[f"{p.sock}-vulns.service"] = vulns_service(p)
+        units[f"{p.sock}-vulns.timer"] = vulns_timer(p)
     return units
 
 
@@ -816,6 +882,7 @@ def provision(projects: list[Project], dry: bool, source: list[str] | None = Non
     stale += [*OLD_SERVER_UNITS, *(f"{p.sock}{s}" for p in projects for s in OLD_SUFFIXES)]
     stale += [n for n in FEED_UNITS if not feed_addr]  # FLEET_FEED_ADDR was removed: nothing listens
     stale += [f"{p.sock}{s}" for p in projects if not p.stand.is_file() for s in STAND_SUFFIXES]  # script gone
+    stale += [f"{p.sock}{s}" for p in projects if not wants_vulns(p) for s in VULNS_SUFFIXES]  # off, or no lock file
     bad |= remove_units([n for n in stale if (UNIT_DIR / n).exists()], dry)
     bad |= run(["systemctl", "--user", "daemon-reload"], dry)
     bad |= run(["systemctl", "--user", "enable", "--now", *names], dry)
@@ -1119,6 +1186,21 @@ def check_stand(p: Project) -> tuple[bool, str] | None:
     if not state:
         return True, "no update recorded yet"
     return bool(state.get("ok")), f"{state.get('text', '')} · {state.get('at', '')}"
+
+
+def check_vulns(p: Project) -> tuple[bool, str] | None:
+    """None when the project is not checked (no lock file, or VULN_CHECK=off). A known critical finding is ○."""
+    if not wants_vulns(p):
+        return None
+    if not (UNIT_DIR / f"{p.sock}-vulns.timer").exists():
+        return False, "lock files are there but the daily check is not provisioned (/dark-factory:provision-server)"
+    try:
+        latest = json.loads((p.path / ".claude/state/vulns/state.json").read_text()).get("latest", {})
+    except (OSError, ValueError, AttributeError):
+        latest = {}
+    if not latest:
+        return True, "no check recorded yet"
+    return bool(latest.get("ok")) and not latest.get("critical"), f"{latest.get('text', '')} · {latest.get('at', '')}"
 
 
 # ---------- worktrees ----------
@@ -1601,6 +1683,7 @@ def status(projects: list[Project], notify_owner: bool = False, stale_days: int 
         line("On-call", check_desk(p))
         line("prod monitor", check_monitor(p, now))
         line("dev stand", check_stand(p))
+        line("vulnerabilities", check_vulns(p))
         line("queue", check_queue(p))
         line("template", check_drift(p))
         line("worktrees", check_worktrees(p, now, stale_days))
