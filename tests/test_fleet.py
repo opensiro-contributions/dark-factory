@@ -191,6 +191,47 @@ class UnitsTest(unittest.TestCase):
         self.assertIn("Unit=df-shop-desk-watch.service", timer)
         self.assertIn("WantedBy=timers.target", timer)
 
+    def test_vulns_units_only_with_a_lock_file(self):
+        self.assertNotIn("df-shop-vulns.timer", fleet.units_for(self.p, "c", "t"))
+        (self.root / "shop/web/node_modules/x").mkdir(parents=True)
+        (self.root / "shop/web/node_modules/x/package-lock.json").write_text("{}")  # a dependency's, not the project's
+        self.assertNotIn("df-shop-vulns.timer", fleet.units_for(self.p, "c", "t"))
+        (self.root / "shop/backend").mkdir()
+        (self.root / "shop/backend/uv.lock").write_text("version = 1\n")
+        units = fleet.units_for(self.p, "c", "t")
+        service, timer = units["df-shop-vulns.service"], units["df-shop-vulns.timer"]
+        self.assertIn('/scripts/vulns.py" "', service)
+        self.assertIn(f'"{self.root / "shop"}"', service)
+        self.assertIn("OnFailure=df-notify@%n.service", service)
+        self.assertNotIn("[Install]", service)
+        self.assertIn("OnCalendar=*-*-* 05:40:00 UTC", timer)
+        self.assertIn("Persistent=true", timer)
+        self.assertIn("Unit=df-shop-vulns.service", timer)
+        self.p.settings["VULN_CHECK"] = "off"
+        self.assertNotIn("df-shop-vulns.timer", fleet.units_for(self.p, "c", "t"))
+
+    def test_vulns_status_line(self):
+        self.assertIsNone(fleet.check_vulns(self.p))  # no lock file, no line
+        (self.root / "shop/uv.lock").write_text("version = 1\n")
+        with mock.patch.object(fleet, "UNIT_DIR", self.root / "units"):
+            ok, text = fleet.check_vulns(self.p)
+            self.assertFalse(ok)
+            self.assertIn("not provisioned", text)
+            (self.root / "units").mkdir()
+            (self.root / "units/df-shop-vulns.timer").write_text("")
+            self.assertEqual(fleet.check_vulns(self.p), (True, "no check recorded yet"))
+            state = self.root / "shop/.claude/state/vulns/state.json"
+            state.parent.mkdir(parents=True)
+            state.write_text(json.dumps({"latest": {"ok": True, "total": 3, "critical": 1, "at": "2026-11-04T05:40:00Z",
+                                                    "text": "3 known on origin/main (1 critical), 0 new"}}))
+            ok, text = fleet.check_vulns(self.p)
+            self.assertFalse(ok)  # a critical one is open
+            self.assertIn("1 critical", text)
+            state.write_text(json.dumps({"latest": {"ok": True, "total": 2, "critical": 0, "at": "x", "text": "2 known"}}))
+            self.assertTrue(fleet.check_vulns(self.p)[0])
+            self.p.settings["VULN_CHECK"] = "off"
+            self.assertIsNone(fleet.check_vulns(self.p))
+
     def test_no_project_units_for_the_queue(self):
         (self.root / "shop/.beads").mkdir()
         (self.root / "shop/.beads/metadata.json").write_text("{}")

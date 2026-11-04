@@ -16,9 +16,14 @@
 
 ## Decided by the builder (Claude) — the owner can override
 
-- **Scanner: osv-scanner** (OSV database). One tool for Python and JavaScript lock files and container images, JSON
-  output, no account, works offline from a cached DB. Seam: the scanner is one function; a project on another stack
-  swaps it, no adapter layer.
+- **Scanner: the OSV API directly** (`api.osv.dev` querybatch + vuln details), lock files read by `vulns.py` itself
+  (stdlib only: uv.lock, requirements*.txt `==` pins, package-lock.json, bun.lock). Changed during phase 1 from the
+  osv-scanner binary: nothing to install on the server (the kit's requirements stay as they are), and a downloaded
+  binary is code from outside that the session may not run. Seam: `parse_lockfile` + `lookup`; another stack adds a
+  reader, no adapter layer. Severity is the GitHub advisory's (`database_specific.severity`); a PYSEC/CVE id that
+  aliases a GHSA collapses into it.
+- **Notices group by package version** ("pypdf 6.21.2 → 6.21.4: 7 advisories"): one upgrade closes them together;
+  the first run on a real project listed 85 advisories in 20 packages.
 - **"Critical"** = an advisory with severity CRITICAL (CVSS ≥ 9.0), or any severity listed in CISA's Known Exploited
   Vulnerabilities catalogue. Project setting `VULN_AUTOFIX_MIN=critical` (`high` allowed for a stricter project).
 - **Release setting:** `VULN_RELEASE=accept|now` in `.claude/factory/session.env`; default `accept` (the safe one).
