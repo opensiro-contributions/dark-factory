@@ -191,6 +191,24 @@ class ClassifyTest(unittest.TestCase):
         self.assertIn("3 advisories, 1 without a fix yet", text)
         self.assertIn("in 1 package", text)
 
+    def test_fix_comes_from_the_range_the_version_is_in(self):
+        v = {"affected": [{"package": {"ecosystem": "PyPI", "name": "Django"}, "ranges": [{"type": "ECOSYSTEM", "events": [
+            {"introduced": "2.2"}, {"fixed": "2.2.28"}, {"introduced": "3.2"}, {"fixed": "3.2.13"},
+            {"introduced": "4.0"}, {"fixed": "4.0.4"}]}]}]}
+        self.assertEqual(vulns.fixed_version(v, "PyPI", "django", "3.2.0"), "3.2.13")
+        self.assertEqual(vulns.fixed_version(v, "PyPI", "django", "4.0.1"), "4.0.4")
+        self.assertEqual(vulns.fixed_version(v, "PyPI", "django", "2.2.30"), "3.2.13")  # between ranges: next line up
+        self.assertEqual(vulns.fixed_version(v, "PyPI", "django", "5.0"), "")
+
+    def test_each_advisory_is_fetched_once(self):
+        net = FakeNet({("npm", "lodash", "4.17.15"): ["GHSA-high"], ("npm", "lodash", "4.17.16"): ["GHSA-high"]})
+        calls = []
+        def counting(url, body=None):
+            calls.append(url)
+            return net(url, body)
+        vulns.lookup([("npm", "lodash", "4.17.15", "a"), ("npm", "lodash", "4.17.16", "b")], counting)
+        self.assertEqual(sum("/vulns/" in c for c in calls), 1)
+
     def test_queries_are_batched_and_deduplicated(self):
         net = FakeNet()
         with mock.patch.object(vulns, "BATCH", 2):
@@ -234,6 +252,30 @@ class RunTest(unittest.TestCase):
         self.assertEqual(len(self.sent), 2)
         self.assertIn("lodash", self.sent[1])
         self.assertNotIn("jinja2", self.sent[1])
+
+    def test_a_told_finding_that_turns_critical_is_told_again(self):
+        global KEV
+        self.run_check()
+        old = KEV
+        KEV = {"vulnerabilities": [{"cveID": "CVE-2020-28500"}]}  # CISA lists the lodash one later
+        try:
+            self.run_check()
+        finally:
+            KEV = old
+        self.assertEqual(len(self.sent), 2)
+        self.assertIn("lodash", self.sent[1])
+        self.assertIn("known exploited", self.sent[1])
+        self.assertNotIn("jinja2", self.sent[1])
+        self.run_check()  # back to not exploited: nothing new to say
+        self.assertEqual(len(self.sent), 2)
+
+    def test_a_cut_response_is_recorded_not_raised(self):
+        import http.client
+
+        def cut(url, body=None):
+            raise http.client.IncompleteRead(b"")
+        self.assertEqual(self.run_check(cut), 0)
+        self.assertIn("OSV check failed", vulns.read_state(self.p)["latest"]["text"])
 
     def test_quiet_day_sends_nothing(self):
         self.assertEqual(self.run_check(FakeNet({})), 0)

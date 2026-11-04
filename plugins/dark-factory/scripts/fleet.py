@@ -508,11 +508,13 @@ LOCKFILE_DEPTH = 3  # how deep under the checkout a lock file is looked for (bac
 
 def has_lockfile(p: Project) -> bool:
     from vulns import is_lockfile
-    for depth in range(LOCKFILE_DEPTH + 1):
-        for f in p.path.glob("/".join(["*"] * (depth + 1))):
-            rel = f.relative_to(p.path).as_posix()
-            if f.is_file() and is_lockfile(rel) and not rel.startswith("."):
-                return True
+    for root, dirs, files in os.walk(p.path):
+        rel = Path(root).relative_to(p.path)
+        # node_modules holds the dependencies' own lock files; dot directories hold worktrees and virtualenvs
+        dirs[:] = [] if len(rel.parts) >= LOCKFILE_DEPTH else \
+            [d for d in dirs if not d.startswith(".") and d != "node_modules"]
+        if any(is_lockfile((rel / f).as_posix()) for f in files):
+            return True
     return False
 
 

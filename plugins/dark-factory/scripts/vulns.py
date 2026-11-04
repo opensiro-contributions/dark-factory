@@ -24,6 +24,7 @@ Settings, from <project>/.claude/factory/session.env:
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import re
 import socket
@@ -112,14 +113,31 @@ def parse_lockfile(path: str, text: str) -> list[tuple[str, str, str]]:
 
 # ---------- OSV ----------
 
-def fixed_version(vuln: dict, eco: str, name: str) -> str:
+def version_key(v: str) -> tuple:
+    return tuple(int(n) for n in re.findall(r"\d+", v)) or (0,)
+
+
+def fixed_version(vuln: dict, eco: str, name: str, version: str) -> str:
+    """The fix on the release line the pinned version is on: the range introduced ≤ version < fixed; between ranges,
+    the nearest fix above it. "" when no fix is above the version."""
+    have = version_key(version)
+    above = []
     for a in vuln.get("affected", []):
         pkg = a.get("package", {})
-        if pkg.get("ecosystem") == eco and pkg.get("name", "").lower() == name.lower():
-            fixes = [e["fixed"] for r in a.get("ranges", []) for e in r.get("events", []) if "fixed" in e]
-            if fixes:
-                return fixes[-1]
-    return ""
+        if pkg.get("ecosystem") != eco or pkg.get("name", "").lower() != name.lower():
+            continue
+        for r in a.get("ranges", []):
+            start = None
+            for e in r.get("events", []):
+                if "introduced" in e:
+                    start = version_key(e["introduced"])
+                elif "fixed" in e:
+                    fix = version_key(e["fixed"])
+                    if start is not None and start <= have < fix:
+                        return e["fixed"]
+                    if fix > have:
+                        above.append(e["fixed"])
+    return min(above, key=version_key) if above else ""
 
 
 def kev_cves(net) -> set[str]:
@@ -154,7 +172,9 @@ def lookup(packages: list[tuple[str, str, str, str]], net=http_json, min_level: 
         for vid in sorted(ids, key=lambda i: (not i.startswith("GHSA-"), i)):  # the GitHub advisory leads its group
             if vid in done:
                 continue
-            v = details.setdefault(vid, net(f"{OSV}/vulns/{vid}"))
+            if vid not in details:
+                details[vid] = net(f"{OSV}/vulns/{vid}")
+            v = details[vid]
             group = {vid, *v.get("aliases", [])}
             done |= group
             severity = v.get("database_specific", {}).get("severity", "") or ""
@@ -164,7 +184,7 @@ def lookup(packages: list[tuple[str, str, str, str]], net=http_json, min_level: 
             found.append({"id": vid, "cve": cves, "severity": severity.upper() or "UNKNOWN", "kev": in_kev,
                           "critical": in_kev or (bool(level) and LEVELS.index(level) >= floor),
                           "ecosystem": eco, "package": name, "version": version, "files": where[(eco, name, version)],
-                          "fixed": fixed_version(v, eco, name), "summary": v.get("summary", "")})
+                          "fixed": fixed_version(v, eco, name, version), "summary": v.get("summary", "")})
     order = {s: i for i, s in enumerate(("CRITICAL", "HIGH", "MODERATE", "LOW", "UNKNOWN"))}
     found.sort(key=lambda f: (not f["critical"], order.get(f["severity"], 9), f["package"], f["id"]))
     return found
@@ -193,10 +213,6 @@ def settings(project: Path) -> dict:
         return fleet.read_env(project / ".claude/factory/session.env")
     except fleet.SettingsError:
         return {}
-
-
-def version_key(v: str) -> tuple:
-    return tuple(int(n) for n in re.findall(r"\d+", v)) or (0,)
 
 
 def group(found: list[dict]) -> list[dict]:
@@ -285,9 +301,11 @@ def check(project: Path, net=http_json, dry: bool = False) -> int:
         min_level = "critical"
     try:
         found = lookup(packages, net, min_level)
-    except (OSError, ValueError, KeyError) as e:  # the next day tries again; the status line shows why
+    except (OSError, ValueError, KeyError, http.client.HTTPException) as e:  # tried again tomorrow; status shows why
         return save(False, f"OSV check failed: {e}")
-    new = [f for f in found if finding_key(f) not in seen]
+    # new, or told before as not critical and critical now (CISA lists exploited CVEs days or weeks later)
+    new = [f for f in found if finding_key(f) not in seen
+           or f["critical"] and not (seen[finding_key(f)] or {}).get("critical")]
     crit = sum(f["critical"] for f in found)
     summary = (f"{len(found)} known on {ref} ({crit} critical), {len(new)} new · "
                f"{len({p[:3] for p in packages})} packages{unread}") if found else \
@@ -297,7 +315,7 @@ def check(project: Path, net=http_json, dry: bool = False) -> int:
         if dry:
             print(text)
         elif notify(text) == 0:
-            seen.update({finding_key(f): now for f in new})
+            seen.update({finding_key(f): {"at": now, "critical": f["critical"]} for f in new})
     seen = {k: v for k, v in seen.items() if k in {finding_key(f) for f in found}}  # fixed ones may come back
     return save(not broken, summary, len(found), crit)
 
