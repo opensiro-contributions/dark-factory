@@ -318,7 +318,7 @@ publish() {
 # fixes, VULN_RELEASE=now); the next normal release from main contains the fix anyway.
 SECURITY_TMP=""
 security_release() {
-  local num="$1" last sha parents tmp picked tag
+  local num="$1" last base sha parents tmp picked tag
   fetch_main || exit 1
   last="$(last_tag)" || { echo "release: cannot read the tags - nothing done" >&2; exit 1; }
   [ -n "${last}" ] || { echo "release: no release yet to build a security release on - make a normal release" >&2; exit 1; }
@@ -332,28 +332,36 @@ for row in sys.stdin:
         break
 ')"
   [ -n "${sha}" ] || { echo "release: PR #${num} is not merged into ${MAIN_BRANCH} after ${last} - nothing done" >&2; exit 1; }
+  # Build on what production runs: the newest release tag on the remote, an earlier security release included (it is
+  # not on main, so last_tag skips it; building on main's last tag would drop that earlier fix from production).
+  base="$(git ls-remote --tags --refs "${REMOTE}" 'v*' | sed -n 's|.*\trefs/tags/||p' | grep -E "${TAG_RE}" | sort -V | tail -n 1)"
+  [ -n "${base}" ] || base="${last}"
   parents="$(git rev-list --parents -n1 "${sha}" | wc -w)"
   SECURITY_TMP="$(mktemp -d)"
   tmp="${SECURITY_TMP}"
   # the trap runs after this function returns, when its locals are gone: it reads the global
   trap 'git worktree remove --force "${SECURITY_TMP}" >/dev/null 2>&1 || true; rm -rf "${SECURITY_TMP}"' EXIT
-  git worktree add -q --detach "${tmp}" "${last}" 2>/dev/null
+  git worktree add -q --detach "${tmp}" "${base}" 2>/dev/null
   # -m 1: a merge commit's change is its diff against main's side
   if ! git -C "${tmp}" cherry-pick -x $([ "${parents}" -gt 2 ] && echo "-m 1") "${sha}" >/dev/null 2>&1; then
     git -C "${tmp}" cherry-pick --abort >/dev/null 2>&1 || true
-    echo "release: the fix of PR #${num} does not apply to ${last} on its own (it builds on unreleased work) - nothing done; release it the normal way" >&2
+    echo "release: the fix of PR #${num} does not apply to ${base} on its own (it builds on unreleased work) - nothing done; release it the normal way" >&2
     exit 1
   fi
   picked="$(git -C "${tmp}" rev-parse HEAD)"
   tag="$(next_tag)" || exit 1
   git tag -a "${tag}" -m "release ${tag}" \
-    -m "Security release: ${last} + the fix of PR #${num} only; acceptance of the fix skipped by the project's VULN_RELEASE=now" \
+    -m "Security release: ${base} + the fix of PR #${num} only; acceptance of the fix skipped by the project's VULN_RELEASE=now" \
     "${picked}"
-  git push -q "${REMOTE}" "refs/tags/${tag}" || { echo "release: pushing tag ${tag} failed - nothing released" >&2; exit 1; }
+  git push -q "${REMOTE}" "refs/tags/${tag}" || {
+    git tag -d "${tag}" >/dev/null 2>&1 || true  # a tag that never shipped must not look like a release here
+    echo "release: pushing tag ${tag} failed - nothing released" >&2
+    exit 1
+  }
   mark_accepted "$(printf '%s\t%s\t\n' "${num}" "security fix")" \
-    "shipped in security release ${tag} (${last} + this fix only); acceptance skipped by the project's VULN_RELEASE=now" 1 \
+    "shipped in security release ${tag} (${base} + this fix only); acceptance skipped by the project's VULN_RELEASE=now" 1 \
     || echo "release: ⚠️ the tag is pushed but PR #${num} is not marked - mark it accepted by hand" >&2
-  echo "release: security tag ${tag} pushed (${last} + PR #${num}); deploy follows a green release.yml"
+  echo "release: security tag ${tag} pushed (${base} + PR #${num}); deploy follows a green release.yml"
 }
 
 case "${1:-}" in

@@ -772,6 +772,22 @@ def test_security_release_refuses_when_the_fix_does_not_apply(clone: Path) -> No
     assert _git(clone, "worktree", "list").count("\n") == 0  # the temporary worktree is gone
 
 
+def test_a_second_security_release_keeps_the_first_fix(clone: Path) -> None:
+    _pr_merge(clone, 11, "Voice input", ("accepted",))
+    assert _release(clone).returncode == 0
+    _pr_merge(clone, 12, "Dark theme")  # waiting for acceptance
+    _pr_merge(clone, 13, "fix: raise certifi")
+    assert _release(clone, "--security", "13").returncode == 0
+    _pr_merge(clone, 14, "fix: raise pyjwt")
+
+    result = _release(clone, "--security", "14")
+
+    assert result.returncode == 0, result.stderr
+    files = _tree(clone, f"v{DAY}.3")
+    assert "pr13.txt" in files and "pr14.txt" in files  # the first fix stays in production
+    assert "pr12.txt" not in files
+
+
 @pytest.mark.parametrize("args", [("--security",), ("--security", "x13"), ("--security", "13", "14")])
 def test_security_release_needs_one_pr_number(clone: Path, args: tuple[str, ...]) -> None:
     assert _release(clone, *args).returncode == 2

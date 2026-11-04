@@ -37,10 +37,10 @@ Settings, from <project>/.claude/factory/session.env:
 from __future__ import annotations
 
 import argparse
+import calendar
 import http.client
 import json
 import re
-import shlex
 import shutil
 import socket
 import subprocess
@@ -329,10 +329,26 @@ Do, in this worktree:
 8. Report the outcome with the tell command from your rules."""
 
 
-def fix_running(slug: str) -> bool:
+FIX_MAX_AGE = 24 * 3600  # an interactive session stays open after its last step: older than this, it is done
+
+
+def fix_running(slug: str, opened_at: str) -> bool:
+    """A fix session is at work. One opened more than FIX_MAX_AGE ago is closed (its transcript stays in claude.ai),
+    so a finished session does not block the next fix."""
     tmux = shutil.which("tmux")
-    return bool(tmux) and subprocess.run([tmux, "-L", f"df-{slug}", "has-session", "-t", f"={FIX_TMUX}"],
-                                         capture_output=True).returncode == 0
+    if not tmux:
+        return False
+    sock = ["-L", f"df-{slug}"]
+    if subprocess.run([tmux, *sock, "has-session", "-t", f"={FIX_TMUX}"], capture_output=True).returncode:
+        return False
+    try:
+        age = time.time() - calendar.timegm(time.strptime(opened_at, "%Y-%m-%dT%H:%M:%SZ"))
+    except (ValueError, OverflowError):
+        age = FIX_MAX_AGE + 1  # opened by an older run or by hand: nothing says it is working
+    if age <= FIX_MAX_AGE:
+        return True
+    subprocess.run([tmux, *sock, "kill-session", "-t", f"={FIX_TMUX}"], capture_output=True)
+    return False
 
 
 def open_fix(project: Path, crit: list[dict], conf: dict) -> bool:
@@ -350,8 +366,10 @@ def open_fix(project: Path, crit: list[dict], conf: dict) -> bool:
     cmd = [claude, "--name", title, "--remote-control", title, *mode, "-w", f"vulnfix-{time.strftime('%Y%m%d')}",
            "--append-system-prompt", FIX_RULES.format(script=SCRIPT),
            fix_prompt(project, crit, "now" if release == "now" else "accept", (project / "scripts/release.sh").is_file())]
+    # the command as separate arguments: tmux runs it without a shell (the owner's shell may be fish, which reads
+    # quotes differently from sh, and the advisory texts are outside data)
     r = subprocess.run([tmux, "-L", p.sock, "-f", "/dev/null", "new-session", "-d", "-s", FIX_TMUX,
-                        "-c", str(project), shlex.join(cmd)], capture_output=True, text=True)
+                        "-c", str(project), *cmd], capture_output=True, text=True)
     return r.returncode == 0
 
 
@@ -375,16 +393,21 @@ def read_ref(project: Path, ref: str) -> tuple[list[tuple[str, str, str, str]], 
 
 
 def release_tag(project: Path) -> str:
-    """The newest release tag on origin (vYYYY.MM.DD.N, or v<N> for the plugin's own scheme): what production runs."""
-    code, out = fleet.sh(["git", "-C", str(project), "tag", "-l", "v*", "--sort=-v:refname"])
-    tags = [t for t in out.splitlines() if re.fullmatch(r"v\d+(\.\d+)*", t)] if code == 0 else []
-    return tags[0] if tags else ""
+    """The newest release tag on origin (vYYYY.MM.DD.N, or v<N> for the plugin's own scheme): what production runs.
+    Only a tag origin has: one left in this clone by a failed push never shipped."""
+    code, remote = fleet.sh(["git", "-C", str(project), "ls-remote", "--tags", "--refs", "origin", "v*"], timeout=60)
+    if code:
+        return ""
+    names = [line.split("refs/tags/", 1)[1] for line in remote.splitlines() if "refs/tags/" in line]
+    tags = [t for t in names if re.fullmatch(r"v\d+(\.\d+)*", t)]
+    return max(tags, key=version_key) if tags else ""
 
 
 def check(project: Path, net=http_json, dry: bool = False) -> int:
     state = read_state(project)
     seen: dict = state.get("seen", {}) if isinstance(state.get("seen"), dict) else {}
     fixing: dict = state.get("fix", {}) if isinstance(state.get("fix"), dict) else {}
+    session = {"at": str(state.get("fix_session_at", ""))}  # when the fix session that may still run was opened
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
     def save(ok: bool, text: str, total: int = 0, critical: int = 0) -> int:
@@ -393,7 +416,7 @@ def check(project: Path, net=http_json, dry: bool = False) -> int:
             return 0
         f = state_file(project)
         f.parent.mkdir(parents=True, exist_ok=True)
-        f.write_text(json.dumps({"seen": seen, "fix": fixing,
+        f.write_text(json.dumps({"seen": seen, "fix": fixing, "fix_session_at": session["at"],
                                  "latest": {"ok": ok, "text": text, "total": total, "critical": critical, "at": now}},
                                 ensure_ascii=False, indent=1))
         return 0
@@ -432,9 +455,10 @@ def check(project: Path, net=http_json, dry: bool = False) -> int:
     opened = False
     if to_fix and not dry and conf.get("VULN_FIX", "").strip().lower() != "off":
         slug = fleet.load_projects([(project.name, str(project))])[0].slug
-        if not fix_running(slug) and open_fix(project, to_fix, conf):
+        if not fix_running(slug, session["at"]) and open_fix(project, to_fix, conf):
             opened = True
             fixing.update({finding_key(f): now for f in to_fix})
+            session["at"] = now
     prod_note = f", {sum(f['prod'] for f in found)} in production ({tag})" if tag and found else ""
     summary = (f"{len(found)} known ({crit} critical{prod_note}), {len(new)} new · "
                f"{len(on_main | in_prod)} packages{unread}") if found else \

@@ -10,6 +10,7 @@ import json
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -348,8 +349,8 @@ class RunTest(unittest.TestCase):
 TMUX_STUB = """#!/usr/bin/env bash
 dir="$(dirname "$0")"
 if [[ " $* " == *" has-session "* ]]; then [ -e "$dir/running" ]; exit $?; fi
-printf '%s\\n' "$@" >> "$dir/tmux.log"
-echo "--" >> "$dir/tmux.log"
+if [[ " $* " == *" kill-session "* ]]; then rm -f "$dir/running"; echo killed >> "$dir/killed.log"; exit 0; fi
+python3 -c 'import json, sys; print(json.dumps(sys.argv[1:]))' "$@" >> "$dir/tmux.log"
 """
 
 
@@ -384,11 +385,10 @@ class FixSessionTest(unittest.TestCase):
         if not log.exists():
             return []
         runs = []
-        for chunk in log.read_text().split("\n--\n"):
-            lines = chunk.strip("\n").split("\n")
-            if lines != [""]:
-                cut = lines.index("-c") + 2  # the shell command after -c <dir> spans lines
-                runs.append([*lines[:cut], "\n".join(lines[cut:])])
+        for row in log.read_text().splitlines():
+            args = json.loads(row)
+            cut = args.index("-c") + 2  # the command after -c <dir>, as separate arguments (no shell)
+            runs.append([*args[:cut], " ".join(args[cut:])])
         return runs
 
     def test_a_new_critical_finding_opens_one_fix_session(self):
@@ -429,10 +429,40 @@ class FixSessionTest(unittest.TestCase):
 
     def test_a_running_fix_session_is_not_doubled_and_the_finding_waits(self):
         (self.bin / "running").write_text("")
+        f = vulns.state_file(self.p)
+        f.parent.mkdir(parents=True)
+        f.write_text(json.dumps({"fix_session_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}))
         quiet(vulns.check, self.p, FakeNet())
         self.assertEqual(self.launches(), [])
         (self.bin / "running").unlink()
         quiet(vulns.check, self.p, FakeNet())
+        self.assertEqual(len(self.launches()), 1)
+
+    def test_the_command_is_not_handed_to_a_shell(self):
+        quiet(vulns.check, self.p, FakeNet())
+        args = json.loads((self.bin / "tmux.log").read_text().splitlines()[0])
+        cmd = args[args.index("-c") + 2:]
+        self.assertTrue(cmd[0].endswith("/claude"))
+        self.assertIn("--remote-control", cmd)  # separate words, not one shell string
+
+    def test_a_session_left_open_for_a_day_is_closed_for_the_next_fix(self):
+        quiet(vulns.check, self.p, FakeNet({("PyPI", "jinja2", "2.4.1"): ["GHSA-crit"]}))
+        (self.bin / "running").write_text("")  # the first session finished but stays open
+        state = vulns.read_state(self.p)
+        state["fix_session_at"] = "2026-01-01T00:00:00Z"
+        vulns.state_file(self.p).write_text(json.dumps(state))
+        quiet(vulns.check, self.p, FakeNet({("PyPI", "jinja2", "2.4.1"): ["GHSA-crit"],
+                                            ("npm", "lodash", "4.17.15"): ["GHSA-kev"]}))
+        self.assertTrue((self.bin / "killed.log").exists())
+        self.assertEqual(len(self.launches()), 2)
+        self.assertIn("lodash", self.launches()[1][-1])
+
+    def test_a_fresh_session_is_left_alone(self):
+        quiet(vulns.check, self.p, FakeNet({("PyPI", "jinja2", "2.4.1"): ["GHSA-crit"]}))
+        (self.bin / "running").write_text("")
+        quiet(vulns.check, self.p, FakeNet({("PyPI", "jinja2", "2.4.1"): ["GHSA-crit"],
+                                            ("npm", "lodash", "4.17.15"): ["GHSA-kev"]}))
+        self.assertFalse((self.bin / "killed.log").exists())
         self.assertEqual(len(self.launches()), 1)
 
     def test_no_session_without_critical_or_when_off(self):
