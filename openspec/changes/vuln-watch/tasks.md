@@ -10,15 +10,20 @@
 
 ## Phase 2 — fix: critical and controlled
 
-- [ ] fix session launcher (worktree, Remote Control, spend cap) with the build-tdd / integrate / wrap skills
-- [ ] attempt limit and the stuck notice
-- [ ] `VULN_RELEASE` / `VULN_AUTOFIX_MIN` settings, documented in the session.env template
-- [ ] `release.sh --security <PR>` (run on a human's yes): release from the last tag + the fix; notes and tag annotation;
-      the fix PR labelled `accepted` with the security-release note; conflict refusal
+- [x] fix session launcher: one Remote Control session (tmux `vulnfix`, own worktree, the project's permission mode),
+      not doubled while one runs, once per finding
+- [x] attempt limit (3 gate rounds) and the stuck report, in the session's instructions; `vulns.py tell` to report
+- [x] `VULN_RELEASE` / `VULN_FIX` / `VULN_AUTOFIX_MIN` settings, documented in fleet.py and the provision-server skill
+- [x] `release.sh --security <PR>`: release from the last tag + the fix; tag note; the fix PR labelled `accepted` with
+      the security-release note; refusal before the first release, for a PR not on main, for a fix that does not apply
+- [x] guard: `release.sh --security` is its own release decision (asked in a session a human answers, denied otherwise)
 
 ## Phase 3 — production view
 
-- [ ] scan the last release tag as well as main; "in production" marked in the notice
-- [ ] critical in the release tag → incident through prod-monitor / On-call when the module is present
-- [ ] the "release?" message for `VULN_RELEASE=now`: to the On-call when present, else the owner notice
-- [ ] skill texts (prod-monitor, session.env template, `/dark-factory:add`) updated
+- [x] scan the newest release tag as well as main; IN PRODUCTION marked in the notice, "already fixed on main: release
+      it" when only the release has it
+- [x] no incident through the On-call: it speaks in the client chat, where an open vulnerability must not be announced
+      (changed from the design; the owner's notice carries IN PRODUCTION instead)
+- [x] the "release?" question for `VULN_RELEASE=now` is the guard's permission dialog in the fix session, which the
+      owner answers in claude.ai (no separate message path)
+- [x] skill texts (provision-server, fleet.py settings, release.sh usage) updated

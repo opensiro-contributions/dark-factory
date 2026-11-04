@@ -364,6 +364,11 @@ RELEASE_MANUAL = (
     "acceptance check; Yes = you decide it",
     RELEASE_ADVICE,
 )
+RELEASE_SECURITY = (
+    "a security release (--security <PR>) ships the last release plus that one fix to production and marks the fix "
+    "accepted, skipping its acceptance on the dev stand; Yes = you release it",
+    RELEASE_ADVICE,
+)
 ACCEPT_MARK = (
     "marking a feature accepted by hand (the label 'accepted', a comment 'accepted by …') is the acceptance "
     "decision; Yes = you accept it",
@@ -374,7 +379,7 @@ ACCEPT_WRAPPER = (
     "Leave acceptance to the owner or the On-call.",
 )
 # Most restrictive first: a command with several decisions gets the first one found here.
-DECISIONS = (ACCEPT_MARK, RELEASE_MANUAL, RELEASE_OWNER, RELEASE_INCLUDE, RELEASE, ACCEPT_WRAPPER)
+DECISIONS = (ACCEPT_MARK, RELEASE_MANUAL, RELEASE_OWNER, RELEASE_INCLUDE, RELEASE_SECURITY, RELEASE, ACCEPT_WRAPPER)
 # What the On-call may do through its wrapper (feedback-desk.sh checks the sender itself).
 ON_CALL_MAY = (RELEASE, RELEASE_INCLUDE, ACCEPT_WRAPPER)
 ON_CALL_ONLY = (
@@ -1395,6 +1400,8 @@ def check_release(cmd: Cmd) -> tuple | None:
             return RELEASE_OWNER
         if "--include-unaccepted" in args:
             return RELEASE_INCLUDE
+        if "--security" in args:
+            return RELEASE_SECURITY
         return RELEASE
     args = _script_args(cmd, "feedback-desk.sh")
     if args and args[0] == "accept":

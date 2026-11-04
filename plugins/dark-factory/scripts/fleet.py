@@ -96,6 +96,9 @@ Per-project settings (optional), <project>/.claude/factory/session.env:
   JANITOR_HANDOFF=off            the janitor does not hand this project's leftovers to its development session
   VULN_CHECK=off                 no daily vulnerability check (it sends package names and versions to api.osv.dev)
   VULN_AUTOFIX_MIN=high          a high finding counts as critical too (default: critical only)
+  VULN_FIX=off                   tell about critical findings, open no fix session
+  VULN_RELEASE=now               after a security fix is merged, ask the owner for a security release (the last
+                                 release plus the fix) instead of waiting for acceptance on the dev stand
 
 Options: --projects FILE, --registry PATH (default: $FACTORY_REGISTRY or ./registry.md), --project NAME,
 --stale-days N (a worktree with no commit for N days is reported as stale; default 14).

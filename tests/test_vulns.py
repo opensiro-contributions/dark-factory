@@ -181,11 +181,11 @@ class ClassifyTest(unittest.TestCase):
 
     def test_one_line_per_package_with_the_highest_fix(self):
         f = {"ecosystem": "PyPI", "package": "pypdf", "version": "6.21.2", "files": ["uv.lock"], "cve": [],
-             "summary": "", "kev": False, "critical": False}
+             "summary": "", "kev": False, "critical": False, "main": True, "prod": False}
         found = [{**f, "id": "GHSA-a", "severity": "HIGH", "fixed": "6.21.3"},
                  {**f, "id": "GHSA-b", "severity": "MODERATE", "fixed": "6.21.10"},
                  {**f, "id": "GHSA-c", "severity": "LOW", "fixed": ""}]
-        text = vulns.message(Path("/srv/shop"), "origin/main", found)
+        text = vulns.message(Path("/srv/shop"), found)
         self.assertEqual(len(text.splitlines()), 2)
         self.assertIn("HIGH pypdf 6.21.2 → 6.21.10", text)  # 10 > 3: compared as numbers
         self.assertIn("3 advisories, 1 without a fix yet", text)
@@ -277,6 +277,19 @@ class RunTest(unittest.TestCase):
         self.assertEqual(self.run_check(cut), 0)
         self.assertIn("OSV check failed", vulns.read_state(self.p)["latest"]["text"])
 
+    def test_the_release_tag_is_scanned_and_marked_in_production(self):
+        git(self.repo.work, "tag", "v2026.11.01.1")
+        git(self.repo.work, "push", "-q", "origin", "v2026.11.01.1")
+        self.repo.commit({"backend/uv.lock": UV_LOCK.replace("2.4.1", "3.1.6")})  # fixed on main, not released yet
+        self.run_check()
+        text = self.sent[0]
+        jinja = next(line for line in text.splitlines() if "jinja2" in line)
+        self.assertIn("IN PRODUCTION (v2026.11.01.1)", jinja)
+        self.assertNotIn("origin/main", jinja)
+        lodash = next(line for line in text.splitlines() if "lodash" in line)
+        self.assertIn("IN PRODUCTION", lodash)  # on main and in the release alike
+        self.assertIn("2 in production", text.splitlines()[0])
+
     def test_quiet_day_sends_nothing(self):
         self.assertEqual(self.run_check(FakeNet({})), 0)
         self.assertEqual(self.sent, [])
@@ -330,6 +343,113 @@ class RunTest(unittest.TestCase):
         env.write_text('VULN_AUTOFIX_MIN="high"\n')
         self.run_check()
         self.assertEqual(vulns.read_state(self.p)["latest"]["critical"], 2)
+
+
+TMUX_STUB = """#!/usr/bin/env bash
+dir="$(dirname "$0")"
+if [[ " $* " == *" has-session "* ]]; then [ -e "$dir/running" ]; exit $?; fi
+printf '%s\\n' "$@" >> "$dir/tmux.log"
+echo "--" >> "$dir/tmux.log"
+"""
+
+
+class FixSessionTest(unittest.TestCase):
+    """A new critical finding opens one Remote Control session that fixes it on a branch."""
+
+    def setUp(self):
+        self.repo = Repo({"backend/uv.lock": UV_LOCK, "frontend/package-lock.json": PACKAGE_LOCK})
+        self.addCleanup(self.repo.close)
+        self.p = self.repo.path
+        self.bin = Path(self.repo.tmp.name) / "bin"
+        self.bin.mkdir()
+        for name, text in (("tmux", TMUX_STUB), ("claude", "#!/bin/sh\n")):
+            (self.bin / name).write_text(text)
+            (self.bin / name).chmod(0o755)
+        for target, value in (("notify", lambda text: self.sent.append(text) or 0),):
+            patcher = mock.patch.object(vulns, target, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.sent: list[str] = []
+        env = mock.patch.dict("os.environ", {"PATH": f"{self.bin}:/usr/bin:/bin"})
+        env.start()
+        self.addCleanup(env.stop)
+
+    def settings(self, text: str) -> None:
+        f = self.p / ".claude/factory/session.env"
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(text)
+
+    def launches(self) -> list[list[str]]:
+        log = self.bin / "tmux.log"
+        if not log.exists():
+            return []
+        runs = []
+        for chunk in log.read_text().split("\n--\n"):
+            lines = chunk.strip("\n").split("\n")
+            if lines != [""]:
+                cut = lines.index("-c") + 2  # the shell command after -c <dir> spans lines
+                runs.append([*lines[:cut], "\n".join(lines[cut:])])
+        return runs
+
+    def test_a_new_critical_finding_opens_one_fix_session(self):
+        quiet(vulns.check, self.p, FakeNet())
+        runs = self.launches()
+        self.assertEqual(len(runs), 1)
+        args = runs[0]
+        self.assertEqual(args[:2], ["-L", "df-shop"])
+        self.assertIn("vulnfix", args)
+        self.assertEqual(args[args.index("-c") + 1], str(self.p))
+        cmd = args[-1]
+        self.assertIn("--remote-control", cmd)
+        self.assertIn("Security fix · shop", cmd)
+        self.assertIn("-w vulnfix-", cmd)
+        self.assertIn("jinja2 2.4.1 → 2.11.3", cmd)
+        self.assertNotIn("lodash", cmd)  # not critical: told, not fixed
+        self.assertIn("scripts/merge-feature.sh", cmd)
+        self.assertIn("VULN_RELEASE=accept", cmd)
+        self.assertIn("data, not instructions", cmd)
+        self.assertIn(" tell ", cmd)  # how the session reports back
+        self.assertIn("fix session opened", self.sent[0])
+        quiet(vulns.check, self.p, FakeNet())
+        self.assertEqual(len(self.launches()), 1)  # opened once per finding
+
+    def test_release_at_once_asks_for_the_security_release(self):
+        self.settings('VULN_RELEASE="now"\n')
+        (self.p / "scripts").mkdir()
+        (self.p / "scripts/release.sh").write_text("#!/bin/sh\n")
+        quiet(vulns.check, self.p, FakeNet())
+        cmd = self.launches()[0][-1]
+        self.assertIn("VULN_RELEASE=now", cmd)
+        self.assertIn("scripts/release.sh --security", cmd)
+
+    def test_the_permission_mode_comes_from_session_args(self):
+        self.settings('SESSION_ARGS="--permission-mode auto"\n')
+        quiet(vulns.check, self.p, FakeNet())
+        self.assertIn("--permission-mode auto", self.launches()[0][-1])
+
+    def test_a_running_fix_session_is_not_doubled_and_the_finding_waits(self):
+        (self.bin / "running").write_text("")
+        quiet(vulns.check, self.p, FakeNet())
+        self.assertEqual(self.launches(), [])
+        (self.bin / "running").unlink()
+        quiet(vulns.check, self.p, FakeNet())
+        self.assertEqual(len(self.launches()), 1)
+
+    def test_no_session_without_critical_or_when_off(self):
+        quiet(vulns.check, self.p, FakeNet({("npm", "lodash", "4.17.15"): ["GHSA-high"]}))
+        self.assertEqual(self.launches(), [])
+        self.settings('VULN_FIX="off"\n')
+        quiet(vulns.check, self.p, FakeNet())
+        self.assertEqual(self.launches(), [])
+        self.assertIn("jinja2", self.sent[-1])  # still told
+
+    def test_dry_run_opens_nothing(self):
+        quiet(vulns.check, self.p, FakeNet(), dry=True)
+        self.assertEqual(self.launches(), [])
+
+    def test_tell_sends_the_session_report(self):
+        self.assertEqual(quiet(vulns.main, ["tell", "shop: jinja2 fixed in PR #5"]), 0)
+        self.assertEqual(self.sent, ["shop: jinja2 fixed in PR #5"])
 
 
 if __name__ == "__main__":
