@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Daily vulnerability check of a project: what its own code pins, against the public OSV database.
 
-df-<slug>-vulns.timer (written by `fleet.py provision`) runs this once a day for every project. No model runs here:
+The nightly janitor (`fleet.py janitor`, df-fleet-janitor.timer) runs this for every project with a lock file. No model
+runs here:
   1. fetch origin and read the lock files on its default branch (what is merged) and on the newest release tag (what
      production runs): uv.lock, requirements*.txt (exact `==` pins), package-lock.json, bun.lock;
   2. ask OSV (api.osv.dev) which of those package versions have known vulnerabilities; an advisory and its aliases
