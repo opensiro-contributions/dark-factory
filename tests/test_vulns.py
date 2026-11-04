@@ -422,7 +422,7 @@ class FixSessionTest(unittest.TestCase):
         self.assertIn("-w vulnfix-", cmd)
         self.assertIn("jinja2 2.4.1 → 2.11.3", cmd)
         self.assertNotIn("lodash", cmd)  # not critical: told, not fixed
-        self.assertIn("scripts/merge-feature.sh", cmd)
+        self.assertIn("dark-factory:vulns", cmd)  # the steps live in the skill
         self.assertIn("VULN_RELEASE=accept", cmd)
         self.assertIn("data, not instructions", cmd)
         self.assertIn(" tell ", cmd)  # how the session reports back
