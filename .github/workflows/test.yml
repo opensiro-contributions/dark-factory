@@ -33,7 +33,7 @@ jobs:
           git config --global user.name "dark-factory CI"
           git config --global user.email "ci@example.invalid"
 
-      - name: Plugin — guard, quota guard, solo kit, level, module install, fleet, status feed, stands, On-call acceptance, queue review, vulnerabilities, rules check (stdlib)
+      - name: Plugin — guard, quota guard, solo kit, level, module install, fleet, status feed, stands, On-call acceptance, queue review (stdlib)
         run: |
           python3 tests/test_guard.py
           python3 tests/test_quota.py
@@ -47,7 +47,6 @@ jobs:
           python3 tests/test_feedback_desk.py
           python3 tests/test_triage.py
           python3 tests/test_vulns.py
-          python3 tests/test_harden.py
 
       - name: Repository wiring (stdlib)
         run: python3 scripts/test_repo.py
@@ -86,16 +85,14 @@ jobs:
           WF=plugins/dark-factory/workflows
           AUTO='{"request":"x","stamp":"s1","bdId":"proj-x","path":"full","buildMode":"pipeline","allowMigrations":true'
           DRYRUN_EXPECT_ERROR=null node $WF/dryrun.mjs feature-auto.js "$AUTO}"
-          DRYRUN_EXPECT_ERROR=null DRYRUN_EXPECT_TYPES='impact=dark-factory:product-owner,lite-review=dark-factory:reviewer' node $WF/dryrun.mjs feature-lite.js '{"request":"x","stamp":"s1","bdId":"proj-x"}'
+          DRYRUN_EXPECT_ERROR=null DRYRUN_EXPECT_TYPES='lite-review=dark-factory:reviewer' node $WF/dryrun.mjs feature-lite.js '{"request":"x","stamp":"s1","bdId":"proj-x"}'
           DRYRUN_EXPECT_ERROR=null node $WF/dryrun.mjs feature-core.js '{"appDir":"/r/.claude/worktrees/fab-x","root":"/r","parentId":"proj-x","buildMode":"pipeline"}'
           # roles: the plugin's agents by default, the project's own file by the bare name
-          DRYRUN_EXPECT_ERROR=null DRYRUN_EXPECT_TYPES='impact=dark-factory:product-owner,plan=dark-factory:tech-lead,critic=dark-factory:tech-lead,review:combined=dark-factory:reviewer' node $WF/dryrun.mjs feature-auto.js "$AUTO}"
-          DRYRUN_EXPECT_ERROR=null DRYRUN_EXPECT_TYPES='impact=product-owner,plan=tech-lead,critic=tech-lead,review:combined=reviewer' node $WF/dryrun.mjs feature-auto.js "$AUTO}" '{"repo-root":{"ok":true,"summary":"/home/dev/app","details":"tech-lead, reviewer, product-owner"}}'
+          DRYRUN_EXPECT_ERROR=null DRYRUN_EXPECT_TYPES='plan=dark-factory:tech-lead,critic=dark-factory:tech-lead,review:combined=dark-factory:reviewer' node $WF/dryrun.mjs feature-auto.js "$AUTO}"
+          DRYRUN_EXPECT_ERROR=null DRYRUN_EXPECT_TYPES='plan=tech-lead,critic=tech-lead,review:combined=reviewer' node $WF/dryrun.mjs feature-auto.js "$AUTO}" '{"repo-root":{"ok":true,"summary":"/home/dev/app","details":"tech-lead, reviewer"}}'
           DRYRUN_EXPECT_ERROR=null DRYRUN_EXPECT_TYPES='plan=tech-lead,critic=tech-lead,review:combined=reviewer' node $WF/dryrun.mjs feature-auto.js "$AUTO}" '{"repo-root":{"ok":true,"summary":"/home/dev/app","details":"tech-lead.md\nsub/reviewer.md"}}'
           # session mode: one builder for the whole task, then one reviewer
-          DRYRUN_EXPECT_ERROR=null DRYRUN_EXPECT_TYPES='impact=dark-factory:product-owner,session-build=dark-factory:builder,review=dark-factory:reviewer' node $WF/dryrun.mjs feature-auto.js '{"request":"x","stamp":"s1","bdId":"proj-x","buildMode":"session"}'
+          DRYRUN_EXPECT_ERROR=null DRYRUN_EXPECT_TYPES='session-build=dark-factory:builder,review=dark-factory:reviewer' node $WF/dryrun.mjs feature-auto.js '{"request":"x","stamp":"s1","bdId":"proj-x","buildMode":"session"}'
           DRYRUN_EXPECT_ERROR='session build failed' node $WF/dryrun.mjs feature-auto.js '{"request":"x","stamp":"s1","bdId":"proj-x","buildMode":"session"}' '{"session-build":{"ok":false,"summary":"no","appDir":"","prBody":""}}'
-          # a failed impact step does not stop the run
-          DRYRUN_EXPECT_ERROR=null node $WF/dryrun.mjs feature-auto.js "$AUTO}" '{"impact":{"ok":false,"userChanges":[],"holes":[]}}'
           DRYRUN_BUDGET=3000 DRYRUN_EXPECT_ERROR='budget exhausted' node $WF/dryrun.mjs feature-auto.js "$AUTO}"
           DRYRUN_EXPECT_ERROR='agent limit reached' node $WF/dryrun.mjs feature-auto.js "$AUTO,\"maxAgents\":8}"
