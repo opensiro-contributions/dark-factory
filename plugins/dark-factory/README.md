@@ -43,6 +43,11 @@ not written instructions, keep the agent away from the decisions that belong to 
   CISA's known-exploited catalogue), checked now in any session; the ones at or above the project's threshold fixed
   on a branch through the full gate and `merge-feature.sh`. On a factory server the nightly janitor runs the check and
   opens a fix session for a critical finding by itself.
+- **`/dark-factory:harden`** (`scripts/harden.py`). The project's written rules (CLAUDE.md, AGENTS.md, the coding
+  standards) that nothing enforces: the script lists the controls that really exist (fence level, permissions,
+  hooks, git hooks, CI, linters, rule tests, branch protection), the skill matches every rule against them and reports
+  the text-only ones as risks, with violations and repeat fixes from the code and history. Read-only; works without
+  the rest of the factory.
 - **`/dark-factory:level`** (`scripts/level.py`). Shows the project's level on the ladder
   ([docs/levels.md](https://github.com/ruslantrachuk/dark-factory/blob/main/docs/levels.md)), the signals for the next one and what would change, and writes
   `FENCE_LEVEL` on your yes (below). A SessionStart hook prints one line when it sees a next-level signal.
