@@ -17,12 +17,16 @@ edit anything; what to do with each risk is the owner's call (make it a control,
 ## Steps
 
 1. **Controls, from the script.** `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/harden.py" .` from the project root. It lists,
-   without a model: the fence level and what the guard denies at it (and what it does NOT deny), Claude Code
-   permissions, sandbox and hooks (local settings win), the plugin's own hooks, git hooks in full, CI jobs with their
-   triggers and `if:` conditions, linter and type-checker config, scripts and tests that check rules, branch
-   protection. This is the evidence of what is enforced; open a control's file only to confirm a match.
-2. **Rules.** Read CLAUDE.md (follow `@path` imports), AGENTS.md and the standards files they point to
-   (`CODING_STANDARDS.md` and the like). Extract each imperative rule (never / always / must / only via / don't /
+   without a model: the effective fence level as the guard reads it (the stricter of the working tree and origin's
+   main branch) and what it does and does NOT enforce at it; Claude Code permissions, sandbox and hooks from the user,
+   project and local settings (managed settings and start-up flags are not read: say so when it matters); the
+   plugin's own hooks; git hooks without comments (flagged when not executable); CI jobs with their triggers, `if:`
+   conditions and `run:` bodies; linter, type-checker and pre-commit config; branch protection. This is the evidence
+   of what is enforced; open a control's file to confirm a match or when the listing is cut. The list of rule-check
+   scripts and tests is found by file name: a hint where to look, not evidence.
+2. **Rules.** Read CLAUDE.md (follow `@path` imports), CLAUDE.local.md, nested CLAUDE.md files of the directories
+   the rules are about, `.claude/rules/`, AGENTS.md, the user-level `~/.claude/CLAUDE.md`, and the standards files
+   they point to (`CODING_STANDARDS.md` and the like). Extract each imperative rule (never / always / must / only via / don't /
    forbidden …) as one line with file:line. A rule repeated in several files counts once (cite the first). Group rules
    that one control would cover (all "commit messages …" rules → one line).
 3. **Match.** For each rule decide, for **the agent, at the moment it would break the rule**:
