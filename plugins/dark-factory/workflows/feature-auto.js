@@ -260,6 +260,64 @@ const COMMIT_STYLE = 'Commit messages by the integrate skill. No Co-Authored-By.
 const MSG_STYLE =
   'Message style (commit and PR): addressed to a reviewer and a future reader of the history, not to a machine. Subject — the essence of the change (Conventional Commits, in the project language — CODING_STANDARDS.md §Project language, default English — ≤~70 characters). Body — coherent prose: what changes and why. Forbidden: chains "A → B → C"; file paths and symbol names as the main text; JSON in the text; telegraphic style. Details (tests, assumptions) — short bullet points. No Co-Authored-By.'
 
+// === Impact before build: the product-owner role writes what changes for the user and the holes it decided ===
+// Two short blocks, ahead of the build and never a question to the owner: "what changes for the user" (also what the
+// owner checks on the dev stand) and "holes found -> decided" (user-visible behaviour the source leaves undefined, the safe
+// default taken, a WHEN/THEN scenario that pins it). The scenarios become acceptance the build must cover with tests; both
+// blocks go into the PR description. A failed, empty or skipped step never stops the run.
+const IMPACT_SCHEMA = {
+  type: 'object',
+  required: ['ok', 'userChanges', 'holes'],
+  properties: {
+    ok: { type: 'boolean' },
+    userChanges: { type: 'array', items: { type: 'string' } },
+    holes: {
+      type: 'array',
+      items: { type: 'object', required: ['hole', 'decision', 'scenario'], properties: { hole: { type: 'string' }, decision: { type: 'string' }, scenario: { type: 'string' } } },
+    },
+  },
+}
+const impactPrompt = (request, source) =>
+  [
+    `Impact before build, as the product owner. Request: "${request}". Source: ${source}`,
+    'Read-only: read the source and the code it touches; write nothing. Return two blocks and NEVER ask the owner a question — decide and record.',
+    '1. userChanges: 3-5 lines in the user\'s language (the language of the source) on the visible behaviour that changes, from the user\'s side ("a parent books a child into a full class -> the child joins the waitlist and sees its place"). If nothing is visible to a user, return an empty list.',
+    '2. holes: places where the source leaves user-visible behaviour undefined and a wrong guess would be costly. For each: hole, decision (a safe, sensible default), scenario (a WHEN/THEN acceptance scenario that pins the decision, checkable by a test at the entry point). Technical trifles (an HTTP status for an empty name) are NOT holes: the builder decides them. At most 5; an empty list is a valid answer.',
+    'Return {ok, userChanges, holes}.',
+  ].join('\n')
+// A failed or empty answer is null: the run goes on without it.
+const impactClean = (r) => {
+  if (!r || r.ok === false) return null
+  const userChanges = Array.isArray(r.userChanges) ? r.userChanges.map(String).filter(Boolean) : []
+  const holes = (Array.isArray(r.holes) ? r.holes : []).filter((h) => h && h.hole && h.decision && h.scenario).slice(0, 5)
+  return userChanges.length || holes.length ? { userChanges, holes } : null
+}
+// For the build and plan prompts: the scenarios to cover.
+const impactForBuild = (im) =>
+  im && im.holes.length
+    ? 'ACCEPTANCE SCENARIOS from the product owner (decisions on holes in the source; each becomes acceptance and is covered by a test): ' + im.holes.map((h, i) => `${i + 1}) ${h.hole} -> ${h.decision}. ${h.scenario}`).join(' ')
+    : ''
+// For the PR description (wrap, integrate, session build).
+const impactForPr = (im) =>
+  im
+    ? 'PRODUCT BLOCKS for the PR description, copied as given, in the language they are written in: ' +
+      (im.userChanges.length ? `"### What changes for the user" as the FIRST lines under ## Done: ${JSON.stringify(im.userChanges)}. ` : '') +
+      (im.holes.length ? `"### Holes found -> decided" under ## Decisions, one item per hole (hole, decision, scenario): ${JSON.stringify(im.holes)}.` : '')
+    : ''
+let IMPACT = null
+async function runImpact(source, stage, need) {
+  if (budgetSpent() || agentsLeft() < need + 1) {
+    log(`feature-auto: impact step skipped before ${stage} (budget or agent cap) — continuing without it`)
+    return
+  }
+  try {
+    IMPACT = impactClean(await spawn(impactPrompt(REQUEST, source), { label: 'impact', phase: stage, schema: IMPACT_SCHEMA, ...role('product-owner') }))
+  } catch (e) {
+    IMPACT = null
+  }
+  log(IMPACT ? `Impact: ${IMPACT.userChanges.length} user-visible lines, ${IMPACT.holes.length} holes decided` : 'Impact: none (empty or failed) — continuing without it')
+}
+
 // === Session mode: the whole run by ONE builder with the stage skills, then one reviewer ===
 // Every agent starts with the project's whole context (CLAUDE.md, skills, plugins) — tens of thousands of tokens before
 // any work. In session mode the run pays that once: one builder walks the route (branch → plan → build-tdd and integrate
@@ -312,15 +370,16 @@ async function sessionRun() {
     : SPEC_PATH
       ? `the ready spec ${SPEC_PATH}; no such file — stop with ok:false, do not invent a design.`
       : `the description of bd task ${BD_ID} (\`bd -C ${root} show ${BD_ID}\`). A bug: reproduce it with a failing test first, then fix the root cause.`
+  await runImpact(source, 'Session', STOP_BEFORE_PR ? 2 : 3)
   const build = await spawn(
     [
       `Do the whole task "${REQUEST}" (bd task ${BD_ID}) yourself, in this one context, by the factory's stage skills. Source: ${source}`,
       `PATHS. ${top} = \`git rev-parse --show-toplevel\` (the session dir).` + (a.root ? '' : ` ${root} = the main checkout, the first path of \`git -C ${top} worktree list\` (the bd store).`) + ` Working tree: ${tree}. No cd: \`git -C\`, \`bd -C\`, absolute paths. Long commands (tests, lint, npm) run in the foreground only.`,
       `1. BRANCH. ${NO_FETCH ? '' : `\`git -C ${top} fetch origin ${BASE}\`, then `}` + (APP_ARG && APP_ARG === a.root ? `\`git -C ${tree} checkout -b ${BRANCH} origin/${BASE}\`.` : `\`git -C ${top} worktree add -b ${BRANCH} ${tree} origin/${BASE}\`.`) + ` Already there (a resumed run): branch ${BRANCH} exists and ${tree} is on it — keep its commits and continue; the closed bd subtasks are done. A dirty tree or someone else's branch in ${tree} — stop with ok:false.`,
-      `2. PLAN by the dark-factory:plan skill (invoke it with the Skill tool): end-to-end slices with files[], testPlan, acceptance, blockedBy. Create them as bd subtasks — children of ${BD_ID}, assignee ${OWNER} (\`timeout 60 bd -C ${root} …\`). ` + (ALLOW_MIGRATIONS ? 'Migrations are allowed.' : 'Migrations are FORBIDDEN in this run: if the task cannot be done without one, stop with ok:false "migration required".'),
+      `2. PLAN by the dark-factory:plan skill (invoke it with the Skill tool): end-to-end slices with files[], testPlan, acceptance, blockedBy. ` + (impactForBuild(IMPACT) ? impactForBuild(IMPACT) + ' Put each scenario into the acceptance of the slice it belongs to. ' : '') + `Create them as bd subtasks — children of ${BD_ID}, assignee ${OWNER} (\`timeout 60 bd -C ${root} …\`). ` + (ALLOW_MIGRATIONS ? 'Migrations are allowed.' : 'Migrations are FORBIDDEN in this run: if the task cannot be done without one, stop with ok:false "migration required".'),
       `3. BUILD each slice in dependency order: build-tdd (the test first), then integrate — its scoped tests and lint, one commit, its bd subtask closed. Then the next slice.`,
       `4. FULL GATE once after the last slice (integrate): ${NO_FETCH ? '' : `\`git -C ${tree} fetch origin ${BASE}\`, `}\`git -C ${tree} merge origin/${BASE} --no-edit\` (conflicts by meaning), then \`${tests}\` and \`${lint}\`` + (a.frontendDir ? `, and the frontend checks of ${tree}/${a.frontendDir} per CLAUDE.md` : '') + (DB_TESTS ? `, and the db lane (\`-m db\`) of ${DB_SHARDS.join(', ')}` : '; the db lane is left to CI — say so in the PR description') + '. Red → fix the root cause and commit.',
-      `5. WRAP by the wrap skill: a note on ${BD_ID} on where the run stopped (do NOT close it — merge-feature.sh does), the project documents in line, ` + (CHANGE_DIR ? `the done items of phase ${PHASE} ticked [x] in tasks.md, ` : '') + `an ADR for a decision that shapes the architecture; commit them. The PR description (## Done with test counters from the real run, ## Decisions with every assumption you made, ## Open questions, the last line \`Task: ${BD_ID}\`) is returned as prBody, not written to a file.`,
+      `5. WRAP by the wrap skill: a note on ${BD_ID} on where the run stopped (do NOT close it — merge-feature.sh does), the project documents in line, ` + (CHANGE_DIR ? `the done items of phase ${PHASE} ticked [x] in tasks.md, ` : '') + `an ADR for a decision that shapes the architecture; commit them. The PR description (## Done with test counters from the real run, ## Decisions with every assumption you made, ## Open questions, the last line \`Task: ${BD_ID}\`) is returned as prBody, not written to a file.` + (impactForPr(IMPACT) ? ' ' + impactForPr(IMPACT) : ''),
       `At any fork take a safe default and record it in assumptions — this run never asks. NO push, NO PR. ` + COMMIT_STYLE + ' ' + MSG_STYLE,
       'Return {ok, summary, details: test counters and touched docs, appDir: the working tree path, prBody, slices: one line per slice with its bd id, assumptions}.',
     ].join('\n'),
@@ -503,6 +562,7 @@ if (FORCE_PATH !== 'full') {
 
 // === 1. Plan — decompose the source into run subtasks (files[] disjoint within a wave, TDD pairs test+code) ===
 phase('Plan')
+await runImpact(SOURCE, 'Plan', 2)
 const stopPlan = outOfBudget('Plan', 2)
 if (stopPlan) return stopPlan
 const plan = await spawn(
@@ -514,6 +574,7 @@ const plan = await spawn(
     // Test paths written from memory and method names that do not exist in the code are the
     // commonest critic remarks. The check is mandatory and cheap.
     `THE CHECK OF STEP 6 IS MANDATORY (otherwise the plan is rejected): paths with \`ls\` from ${APP}, test files with \`find ${CODE}/tests -name "<name>"\`, methods with \`grep -rn "def <name>" ${CODE}/src\`; message catalog keys added by a task that edits ${a.i18nFile || "the project's message catalog"}, covering ALL snapshots and branches named in the source.`,
+    impactForBuild(IMPACT) ? impactForBuild(IMPACT) + ' Put each scenario into the acceptance of the task that closes it and into requirementMap.' : '',
     'At ANY fork — a safe default recorded in assumptions[]. Do NOT ask — this is automatic mode. Do NOT write code and do NOT commit.',
     `migrationNeeded=true if an alembic migration is needed. ${ALLOW_MIGRATIONS ? 'Migrations are allowed (per the spec).' : 'Migrations are FORBIDDEN in this run — if it cannot be done without one, still return the plan with migrationNeeded=true (the orchestrator will stop).'}`,
     'requirementMap: requirement (a MUST from the spec / a tasks.md item / a bug acceptance criterion) → keys of the tasks that close it. Return {title, tasks, assumptions, requirementMap, migrationNeeded, details}.',
@@ -777,6 +838,7 @@ async function runChunks(chunks, why) {
         noFetch: true,
         branchReady: true,
         skipWrap: true,
+        impact: IMPACT,
         allowMigrations: ALLOW_MIGRATIONS,
         assignee: OWNER,
         appDir: APP,
@@ -856,6 +918,7 @@ const integrate = await spawn(
     'The project documents — wrap step 2 (test counters from the real run; nothing touched — say so in the PR description).',
     `THE PR DESCRIPTION — wrap step 4, returned as prBody (not a file, not committed). \`## Done\` — behaviour and test counters from the real run. \`## Decisions\` — the choices and why, including the assumptions ("decisions the machine made for you": ${JSON.stringify(assumptions)}) the critic remarks accepted as known consequences (${JSON.stringify(CRITIC_NOTES)}) and the review outcome — what Fix applied or rejected and the minor findings left as they are (${JSON.stringify(reviewOutcome || {})}); a decision that shapes the architecture also gets an ADR in the branch. \`## Open questions\` — unimplemented subtasks and remaining review blockers (${JSON.stringify(blockers.map((b) => b.summary))}), each follow-up as a bd task with its id; "none" if there are none. End with the line \`Task: ${BD_ID}\`. scripts/merge-feature.sh refuses a PR without these sections and writes the description into the merge commit.` +
       (CHANGE_ABS ? ` In ${CHANGE_ABS}/tasks.md mark [x] the completed items of phase ${PHASE}.` : ''),
+    impactForPr(IMPACT),
     `Commit the docs, openspec and an ADR (if any) as a separate commit on ${BRANCH} (\`git -C ${APP} commit\`). NO push, NO PR. ` + COMMIT_STYLE,
     'Return {ok, summary, details: test counters (fast/db/ruff), closed subtasks, touched docs; prBody: the PR description}.',
   ].join('\n'),
