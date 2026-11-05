@@ -33,6 +33,7 @@ python3 tests/test_init_kit.py
 python3 tests/test_level.py
 python3 tests/test_vulns.py
 python3 tests/test_harden.py
+python3 tests/test_secrets_scan.py
 python3 tests/test_add_module.py
 
 # Plugin and marketplace manifests (Claude Code CLI)

@@ -48,6 +48,11 @@ not written instructions, keep the agent away from the decisions that belong to 
   hooks, git hooks, CI, linters, rule tests, branch protection), the skill matches every rule against them and reports
   the text-only ones as risks, with violations and repeat fixes from the code and history. Read-only; works without
   the rest of the factory.
+- **`/dark-factory:secrets`** (`scripts/secrets_scan.py`). Where the project's secrets could leak or reach the wrong
+  hands, the agent's included: gitleaks (redacted) over the history and the working tree, secret files in and around
+  the project and who can read them, MCP credentials, shell histories, the agent's permissions, docker/sudo and open
+  ports, dumps the same user can delete; the skill judges what each key allows and reports risks — names and paths,
+  never values. Read-only, sends nothing; works without the rest of the factory.
 - **`/dark-factory:level`** (`scripts/level.py`). Shows the project's level on the ladder
   ([docs/levels.md](https://github.com/ruslantrachuk/dark-factory/blob/main/docs/levels.md)), the signals for the next one and what would change, and writes
   `FENCE_LEVEL` on your yes (below). A SessionStart hook prints one line when it sees a next-level signal.
