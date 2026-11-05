@@ -31,7 +31,7 @@ becomes a role.
 | `tech-lead` | sizes work (preloads `size-task`), plans a phase (preloads `plan`), slices it end to end, assesses feasibility and risk, critiques a plan | `plan`, `replan`, `critic`, `split` in `feature-auto` | "size this task", "is this plan sound", "split this change" |
 | `builder` | builds a slice by TDD, integrates it (tests, lint, a commit, bd close), runs the full gate, wraps up — preloads `build-tdd`, `integrate`, `wrap`; writes on the branch, never pushes | the implementers, integrators, gates and Fix in `feature-core`, Build and Wrap in `feature-lite`, the final integration in `feature-auto` | "build subtask X", "integrate and run the gates" |
 | `reviewer` | fresh-context, read-only review through one lens, findings in the `docs/review-contract.md` format | the review lenses in `feature-core` | "review this diff for missing tests" |
-| `product-owner` | necessity, user flow, WHEN/THEN scenarios, BV/TC/RR | not called by the pipeline (the `feature-sanity-check` skill calls it) | "look at this as the product owner" |
+| `product-owner` | necessity, user flow, WHEN/THEN scenarios, BV/TC/RR, impact before build | `impact` in `feature-auto` and `feature-lite`, before the build: what changes for the user and the holes it decided, as acceptance scenarios (the `feature-sanity-check` skill calls it too) | "look at this as the product owner" |
 
 What stays inside the scripts is the run's mechanics: paths and gate commands, the file scope of a parallel worker
 ("do not commit, the integrator does"), schemas, caps, branch and bd setup, the push and PR step. Everything that is

@@ -17,7 +17,8 @@ export const meta = {
 //     '' for code at the tree root),
 //   models? ({implement?} — model id for the build, wrap-up and PR agents; left out, they inherit the session's model),
 //   projectRoles? (names of the roles the project overrides in .claude/agents/; feature-auto passes them),
-//   maxAgents?=5 (agent calls this run may make — build, review, a fix only for critical or major findings, wrap, PR: at most 5; feature-auto passes what is left of its cap) }
+//   impact? (the product-owner's impact blocks {userChanges, holes} or null, when feature-auto already made the step; left out, this run makes it before Build),
+//   maxAgents?=6 (agent calls this run may make — impact, build, review, a fix only for critical or major findings, wrap, PR: at most 6; feature-auto passes what is left of its cap) }
 // Branch: <type>/<trackerId>-<slug> with a tracker ID, <type>/<slug> without (default slug: lite-<stamp>).
 // merge-feature.sh finds the task to close from the branch name: the tracker ID equals the task's external_ref, or
 // the slug is the label change:<slug> of an epic (a phase: -p<K>). When it finds none it says so — close the task
@@ -73,7 +74,7 @@ const BUILDER = { agentType: PROJECT_ROLES.includes('builder') ? 'builder' : 'da
 // Cost limits. A token target (Workflow budget.total) exists only when a human set one; the agent cap (args.maxAgents)
 // is the limit an unattended run always has. A stage that would pass either stops the run cleanly.
 const budgetSpent = () => typeof budget !== 'undefined' && budget && budget.total != null && budget.remaining() <= 0
-const MAX_AGENTS = Number(a.maxAgents) > 0 ? Math.floor(Number(a.maxAgents)) : 5
+const MAX_AGENTS = Number(a.maxAgents) > 0 ? Math.floor(Number(a.maxAgents)) : 6
 let agentsUsed = 0
 function stopBefore(stage) {
   if (budgetSpent()) {
@@ -187,10 +188,65 @@ const FE = a.frontendDir ? String(a.frontendDir).replace(/^\/+|\/+$/g, '') : nul
 const FRONTEND_CMD = (dir) => `npm --prefix ${dir}/${FE} run typecheck && npm --prefix ${dir}/${FE} run lint && npm --prefix ${dir}/${FE} run test:run`
 const LINT_CMD = (dir) => a.lintCmd ? TREE_CMD(a.lintCmd, dir) : `${RUFFBIN(dir)} check ${dir}/${S}src ${dir}/${S}tests && ${RUFFBIN(dir)} format --check ${dir}/${S}src ${dir}/${S}tests`
 
+// === Impact before build: the product-owner role writes what changes for the user and the holes it decided ===
+// Two short blocks, ahead of the build and never a question to the owner: "what changes for the user" (also what the
+// owner checks on the dev stand) and "holes found -> decided" (user-visible behaviour the source leaves undefined, the safe
+// default taken, a WHEN/THEN scenario that pins it). The scenarios become acceptance the build must cover with tests; both
+// blocks go into the PR description. A failed, empty or skipped step never stops the run.
+const IMPACT_SCHEMA = {
+  type: 'object',
+  required: ['ok', 'userChanges', 'holes'],
+  properties: {
+    ok: { type: 'boolean' },
+    userChanges: { type: 'array', items: { type: 'string' } },
+    holes: {
+      type: 'array',
+      items: { type: 'object', required: ['hole', 'decision', 'scenario'], properties: { hole: { type: 'string' }, decision: { type: 'string' }, scenario: { type: 'string' } } },
+    },
+  },
+}
+const impactPrompt = (request, source) =>
+  [
+    `Impact before build, as the product owner. Request: "${request}". Source: ${source}`,
+    'Read-only: read the source and the code it touches; write nothing. Return two blocks and NEVER ask the owner a question — decide and record.',
+    '1. userChanges: 3-5 lines in the user\'s language (the language of the source) on the visible behaviour that changes, from the user\'s side ("a parent books a child into a full class -> the child joins the waitlist and sees its place"). If nothing is visible to a user, return an empty list.',
+    '2. holes: places where the source leaves user-visible behaviour undefined and a wrong guess would be costly. For each: hole, decision (a safe, sensible default), scenario (a WHEN/THEN acceptance scenario that pins the decision, checkable by a test at the entry point). Technical trifles (an HTTP status for an empty name) are NOT holes: the builder decides them. At most 5; an empty list is a valid answer.',
+    'Return {ok, userChanges, holes}.',
+  ].join('\n')
+// A failed or empty answer is null: the run goes on without it.
+const impactClean = (r) => {
+  if (!r || r.ok === false) return null
+  const userChanges = Array.isArray(r.userChanges) ? r.userChanges.map(String).filter(Boolean) : []
+  const holes = (Array.isArray(r.holes) ? r.holes : []).filter((h) => h && h.hole && h.decision && h.scenario).slice(0, 5)
+  return userChanges.length || holes.length ? { userChanges, holes } : null
+}
+// For the build and plan prompts: the scenarios to cover.
+const impactForBuild = (im) =>
+  im && im.holes.length
+    ? 'ACCEPTANCE SCENARIOS from the product owner (decisions on holes in the source; each becomes acceptance and is covered by a test): ' + im.holes.map((h, i) => `${i + 1}) ${h.hole} -> ${h.decision}. ${h.scenario}`).join(' ')
+    : ''
+// For the PR description (wrap, integrate, session build).
+const impactForPr = (im) =>
+  im
+    ? 'PRODUCT BLOCKS for the PR description, copied as given, in the language they are written in: ' +
+      (im.userChanges.length ? `"### What changes for the user" as the FIRST lines under ## Done: ${JSON.stringify(im.userChanges)}. ` : '') +
+      (im.holes.length ? `"### Holes found -> decided" under ## Decisions, one item per hole (hole, decision, scenario): ${JSON.stringify(im.holes)}.` : '')
+    : ''
+// feature-auto passes the impact it already made (args.impact, null when it had none): then there is no second step.
+let IMPACT = a.impact === undefined ? null : impactClean(a.impact)
+
 // === 1. Build — ONE agent builds the whole feature by TDD ===
 phase('Build')
 const stopBuild = stopBefore('Build')
 if (stopBuild) return stopBuild
+if (a.impact === undefined && !budgetSpent() && agentsUsed + 1 < MAX_AGENTS) {
+  try {
+    IMPACT = impactClean(await spawn(impactPrompt(REQUEST, SPEC_PATH ? `the ready spec ${SPEC_PATH}` : `the request itself${BD_ID ? ` and bd task ${BD_ID}` : ''}`), { label: 'impact', phase: 'Build', schema: IMPACT_SCHEMA, agentType: PROJECT_ROLES.includes('product-owner') ? 'product-owner' : 'dark-factory:product-owner' }))
+  } catch (e) {
+    IMPACT = null
+  }
+  log(IMPACT ? `Impact: ${IMPACT.userChanges.length} user-visible lines, ${IMPACT.holes.length} holes decided` : 'Impact: none (empty or failed) — continuing without it')
+}
 const build = await spawn(
   [
     APP ? `Working tree of the run: ${APP} (absolute path).` : 'STEP -1: determine the repo root: `git rev-parse --show-toplevel` — from now on this is ${DIR}; all commands use the absolute path.',
@@ -198,6 +254,7 @@ const build = await spawn(
       ? `The feature spec is READY and is a PRECONDITION (written by a human BEFORE the run). Read it by the ABSOLUTE path ${SPEC_PATH}. Your job is IMPLEMENTATION strictly per the spec, by TDD (code+tests). Do NOT rewrite and do NOT commit the spec. Forks not covered by the spec → KISS/YAGNI, record them in assumptions[]. If there is NO file at the spec path — do NOT invent a design: return ok:false (the task is not ready for implementation).`
       : 'Implement the feature ENTIRELY on your own, by TDD, like an experienced developer: a short brainstorm-lite on safe defaults (forks → KISS/YAGNI, record them in assumptions[]), then code+tests.',
     TOPO(APP || '${DIR}'),
+    impactForBuild(IMPACT),
     `Request: "${REQUEST}".${BD_ID ? ` bd task: ${BD_ID}.` : ''}`,
     BRANCH_READY
       ? `STEP 0 — branch ${BRANCH} has ALREADY been created by the caller in tree ${APP || '${DIR}'}: make sure \`git -C ${APP || '${DIR}'} rev-parse --abbrev-ref HEAD\` = ${BRANCH} and the tree is clean. Do not branch again.`
@@ -262,7 +319,7 @@ const wrap = await spawn(
       ? `1) bd TRACING: task ${BD_ID || '(see assignee ' + ASSIGNEE + ')'} has already been claimed by the caller. Do NOT create a duplicate and do NOT close the task: scripts/merge-feature.sh closes it after the merge, finding it by the branch name (tracker ID or slug). Leave it in_progress and add a note about what was done (\`bd -C ${ROOT || APP || '${DIR}'} update <id> --append-notes "…"\`).`
       : `1) bd TRACING: create ONE bd task for the feature (\`bd -C ${ROOT || APP || '${DIR}'} create --type=feature --acceptance="…"\`) — do NOT close it; leave it in_progress with a note (bd update <id> --notes). Put its id first in details; give it the label change:<slug> of the branch slug (and external_ref = the tracker ID, if any) so scripts/merge-feature.sh finds it, or close it by hand after the merge.`,
     '2) The project documents and tasks.md — wrap steps 2–3 (test counters from the REAL run, not "by analogy"; nothing touched — say "project documents need no changes").',
-    '3) THE PR DESCRIPTION — wrap step 4, returned as prBody (not a file, not committed). ## Decisions names what the review found and what was fixed or rejected.',
+    '3) THE PR DESCRIPTION — wrap step 4, returned as prBody (not a file, not committed). ## Decisions names what the review found and what was fixed or rejected.' + (impactForPr(IMPACT) ? ' ' + impactForPr(IMPACT) : ''),
     'Commit the wrap-up (docs, tasks.md, an ADR if any) as a separate commit on the same branch. NO push, NO PR.',
     COMMIT_STYLE,
     'Return {ok, summary, details: bd task id + which docs were touched + test counters; prBody: the PR description}.',
