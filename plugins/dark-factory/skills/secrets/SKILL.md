@@ -13,8 +13,10 @@ description: >
 
 Output is a **risk report**: no recommendations, no fixes, no edits. **Never print a secret value** — not in the
 report, not in a command's output you show, not "just the first characters". Name files, variables, key kinds.
-Reading a secret file's content into your context is itself the risk this skill looks for: don't `cat`, `grep -v`,
-`source` or `env` a secret file; the script classifies values without showing them.
+Reading a secret file's content into your context is itself the risk this skill looks for. A model reads a secret
+through the Read tool, `cat`/`head`/`grep`/`source`/`env`, `git show`, `git log -p`, `git grep`, or any diff that
+contains it: use none of them on a secret file. Do not open files the inventory lists as holding secret kinds; the
+script classifies values without showing them.
 
 ## Steps
 
@@ -29,7 +31,7 @@ Reading a secret file's content into your context is itself the risk this skill 
    - secret files around it (`~/.config`, `~/.netrc`, cloud keys, gh, ssh keys), MCP server credentials in
      `~/.claude.json`, secret-shaped strings in shell histories;
    - what the agent may read: Claude Code permissions and sandbox from user, project and local settings;
-   - the machine: the user's groups (docker = root), passwordless sudo, containers and compose files publishing ports
+   - the machine: the user's groups (docker = root, sudo group membership), containers and compose files publishing ports
      on all interfaces; dumps and backups in the home directory and who can delete them.
    gitleaks' `generic-api-key` findings are listed apart: most are config names, not secrets — say how many,
    and judge them by the file (a test fixture, a doc, an env file, production code) — don't open the lines.
@@ -42,7 +44,7 @@ Reading a secret file's content into your context is itself the risk this skill 
      in settings that mutate production (rebuild, restart, env vars), deploy scripts that use the key. Say "unknown"
      when the evidence is not there; never call a provider API or connect with a key to find out;
    - **what else it reaches**: backups or dumps deletable by the same user or key, production reachable from this
-     machine, the same key in several projects.
+     machine, the same key in several projects (compare by file and variable name only, never by looking at values).
 3. **Rank.** Production write or delete reachable by the agent > a secret in git history > account-wide tokens >
    world-readable secret files and dumps > exposure of third-party keys (cost and abuse) > hygiene.
 

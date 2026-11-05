@@ -54,7 +54,10 @@ RULE_CHECK_WORDS = ("invariant", "architect", "boundar", "import", "lint", "cont
 SECRET_RE = re.compile(
     r"(?i)((?:token|secret|password|passwd|api[_-]?key|authorization)[\"']?\s*[=:]\s*[\"']?(?:bearer\s+)?|bearer\s+)"
     r"[^\s\"';&|)]{4,}"
-    r"|\b(?:gh[pousr]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|xox[abp]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16})"
+    r"|\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|glpat-[A-Za-z0-9_-]{16,}"
+    r"|[sr]k_live_[A-Za-z0-9]{16,}|AIza[0-9A-Za-z_-]{30,}"
+    r"|eyJ[A-Za-z0-9_-]{5,}\.eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}"
+    r"|sk-[A-Za-z0-9_-]{20,}|xox[abp]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16})"
     r"|(://[^:/\s@]+:)[^@\s]+@")
 
 

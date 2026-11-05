@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -47,6 +48,9 @@ class ScanTest(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
         mock.patch.object(Path, "home", lambda: self.home).start()
+        real_which = shutil.which
+        mock.patch.object(scan.shutil, "which", lambda n, *a, **k: None if n in ("docker", "gitleaks", "sudo")
+                          else real_which(n, *a, **k)).start()
         self.addCleanup(mock.patch.stopall)
 
     def write(self, rel: str, text: str, base: Path | None = None, mode: int = 0o600) -> Path:
@@ -127,7 +131,7 @@ class ScanTest(unittest.TestCase):
         self.assertIn("~/.config/app/prod-db.env", out)
         self.assertIn("app_owner` → REMOTE host", out)
         self.assertIn("~/.config/app/flags.env", out)
-        self.assertIn("no secret-shaped values found", out)
+        self.assertIn("none of the known secret shapes found", out)
         self.assertIn("MCP `host` (project proj): credentials in header Authorization", out)
         self.assertIn("MCP `db` (project proj): credentials in DB_PASSWORD", out)
         self.assertIn("~/.bash_history: GitHub token ×1", out)
@@ -147,6 +151,162 @@ class ScanTest(unittest.TestCase):
         kinds = scan.classify(f"API_TOKEN={PW}\npassword: {PW}x\n")
         self.assertTrue(any("API_TOKEN" in k and "password" in k for k in kinds), kinds)
         self.assertNotIn(PW, " ".join(kinds))
+
+    def run_fake_gitleaks(self, root: Path, findings: dict, code: int = 0) -> str:
+        def fake_sh(args, cwd=None, timeout=60):
+            if args and args[0] == "/fake/gitleaks":
+                if code == 0:
+                    Path(args[args.index("--report-path") + 1]).write_text(json.dumps(findings[args[1]]))
+                return code, ""
+            return real_sh(args, cwd, timeout)
+
+        real_sh = scan.sh
+        with mock.patch.dict(os.environ, {"GITLEAKS": "/fake/gitleaks"}), \
+                mock.patch.object(scan.os, "access", lambda p, m: True), mock.patch.object(scan, "sh", fake_sh):
+            return "\n".join(scan.gitleaks(root) or [])
+
+    def test_m1_root_under_noise_named_dirs_keeps_findings(self) -> None:
+        for parts in (("build", "p"), (".claude", "worktrees", "x")):
+            root = Path(self.tmp.name).joinpath("o", *parts)
+            root.mkdir(parents=True)
+            f = [{"RuleID": "github-pat", "File": str(root / "app/cfg.py"), "StartLine": 1},
+                 {"RuleID": "github-pat", "File": str(root / "node_modules/x.js"), "StartLine": 1}]
+            out = self.run_fake_gitleaks(root, {"git": f, "dir": f})
+            self.assertIn("1 finding(s)", out)
+            self.assertIn("app/cfg.py: github-pat", out)
+            self.assertNotIn("node_modules", out)
+
+    def test_s1_dsn_user_token_is_hidden(self) -> None:
+        tok = "glpat-" + "Ab1Cd2Ef3Gh4Ij5Kl6"
+        got = scan.dsn_classes(f"https://{tok}:x-oauth-basic@git.example.com/r\n"
+                               f"postgres://github_pat_{'A1' * 15}:pw123456@db.example.com/x\n"
+                               f"postgres://{'Ab1' * 10}:pw123456@db.example.com/x\n"
+                               "postgres://app_owner:pw123456@db.example.com/x")
+        joined = "\n".join(got)
+        self.assertNotIn(tok, joined)
+        self.assertNotIn("github_pat", joined)
+        self.assertNotIn("Ab1Ab1", joined)
+        self.assertIn("https user ***", joined)
+        self.assertIn("postgres user ***", joined)
+        self.assertEqual(joined.count("user ***"), 2)
+        self.assertIn("user `app_owner`", joined)
+
+    def test_s2_env_names_skip_base64_and_multiline(self) -> None:
+        text = ('A_KEY=1\nlower_name=2\nMIIBabcDEF1234==\nMixedCase=3\n'
+                'PRIVATE="-----BEGIN KEY-----\nAAAAAAAAAAAA=\nREAL_LOOKING=oops\n-----END KEY-----"\n'
+                'MULTI="first\nINSIDE_NAME=x\nend"\nAFTER=1\n')
+        self.assertEqual(scan.env_names(text), ["AFTER", "A_KEY", "MULTI", "PRIVATE", "lower_name"])
+
+    def test_s3_docker_ports(self) -> None:
+        ports = "0.0.0.0:8080->80/tcp, :::8080->80/tcp, 127.0.0.1:5432->5432/tcp, 10.1.2.3:9000->9000/tcp, " \
+                "[::1]:7000->7000/tcp, 6000->6000/udp, 3000/tcp"
+        self.assertEqual(scan.docker_exposed(ports), ["6000/udp", "8080/tcp"])
+        self.assertFalse(any(ch in " ".join(scan.docker_exposed(ports)) for ch in ".:"))
+
+    def test_c1_host_kinds(self) -> None:
+        for host, want in (("localhost", "local"), ("127.0.0.1", "local"), ("[::1]", "local"), ("10.2.3.4", "local"),
+                           ("172.20.0.5", "local"), ("172.32.0.5", "REMOTE"), ("169.254.1.1", "local"),
+                           ("host.docker.internal", "local"), ("db.example.com", "REMOTE"), ("8.8.8.8", "REMOTE"),
+                           ("db", "unknown (short name)")):
+            self.assertEqual(scan.host_kind(host), want, host)
+        self.assertEqual(scan.dsn_classes("postgres://u:pw123456@[::1]:5432/d"), ["postgres user `u` → local host"])
+
+    def test_c2_files_inside_ignored_directories(self) -> None:
+        self.write(".gitignore", "secrets/\nnode_modules/\n", mode=0o644)
+        self.write("secrets/id_rsa", "-----BEGIN OPENSSH PRIVATE KEY-----\nx\n")
+        self.write("secrets/prod.env", f"DB_PASSWORD={PW}\n")
+        self.write("node_modules/p/.env", "A=1\n")
+        git(self.root, "add", ".gitignore")
+        git(self.root, "commit", "-q", "-m", "x")
+        out = self.out()
+        self.assertIn("secrets/id_rsa — ignored", out)
+        self.assertIn("secrets/prod.env — ignored", out)
+        self.assertNotIn("node_modules", out)
+
+    def test_c3_shapes(self) -> None:
+        pat = "github_pat_" + "A1b2C3d4E5" * 3
+        text = "\n".join([f'"password": "{PW}"', f"'client_secret': '{PW}9'", "password hunter2secret",
+                          "db:5432:app:user:hunter2secret", pat, "glpat-" + "a1B2" * 6, "sk_live_" + "a1B2" * 6,
+                          "AIza" + "a1B2" * 9, "eyJhbGciOi.eyJzdWIiOi.abcdefgh12"])
+        kinds = " | ".join(scan.classify(text))
+        for k in ("GitHub fine-grained token", "GitLab token", "Stripe live key", "Google API key", "JWT",
+                  ".netrc password", ".pgpass entry", "client_secret", "password"):
+            self.assertIn(k, kinds)
+        self.assertTrue(scan.classify(f'"password": "{PW}"', strict=True))
+        import harden
+        for tok in (pat, "glpat-" + "a1B2" * 6, "sk_live_" + "a1B2" * 6, "AIza" + "a1B2" * 9,
+                    "eyJhbGciOi.eyJzdWIiOi.abcdefgh12"):
+            self.assertNotIn(tok, harden.mask(f"echo {tok} done"))
+
+    def test_c3_file_regex_skips_source(self) -> None:
+        self.assertFalse(scan.SECRET_FILE_RE.search("src/credentials.py"))
+        self.assertFalse(scan.SECRET_FILE_RE.search("web/credentials.ts"))
+        self.assertTrue(scan.SECRET_FILE_RE.search("aws/credentials"))
+
+    def test_c4_compose_ports(self) -> None:
+        text = ('services:\n  a:\n    ports:\n      - "5432:5432"   # db\n      - 8080:80/tcp\n'
+                '      - "0.0.0.0:9000:9000"\n      - "127.0.0.1:6379:6379"\n      - 3000\n'
+                '      # - "1111:1111"\n    command:\n      - 4000:4000\n')
+        bare, explicit = scan.compose_ports(text)
+        self.assertEqual(bare, ["5432:5432", "8080:80", "3000"])
+        self.assertEqual(explicit, ["9000:9000"])
+        self.write("docker-compose.yml", 'services:\n  a:\n    ports:\n      - "7777:7777"\n', mode=0o644)
+        self.assertIn("docker-compose.yml: ports without a host IP (7777:7777)", self.out())  # untracked file too
+
+    def test_c5_big_files_reported_not_clean(self) -> None:
+        self.write(".env", "A=1\n")
+        with mock.patch.object(scan, "read", lambda p, limit=2_000_000: None):
+            out = scan.inventory(self.root)
+        self.assertIn("not scanned (too large or unreadable)", out)
+
+    def test_c6_non_utf8_names_and_section_guard(self) -> None:
+        os.mkdir(os.path.join(os.fsencode(self.root), b"d\xff"))
+        with open(os.path.join(os.fsencode(self.root), b"d\xff", b".env"), "w") as fh:
+            fh.write("A=1\n")
+        self.assertIsInstance(self.out(), str)
+        with mock.patch.object(scan, "dumps", side_effect=RuntimeError("secret text " + PW)):
+            out = self.out()
+        self.assertIn("section failed: RuntimeError", out)
+        self.assertNotIn("secret text", out)
+        self.assertIn("## The machine", out)
+
+    def test_c7_gitleaks_null_report_and_timeout(self) -> None:
+        def fake_sh(args, cwd=None, timeout=60):
+            if args and args[0] == "/fake/gitleaks":
+                Path(args[args.index("--report-path") + 1]).write_text("null")
+                return 0, ""
+            return real_sh(args, cwd, timeout)
+
+        real_sh = scan.sh
+        with mock.patch.dict(os.environ, {"GITLEAKS": "/fake/gitleaks"}), \
+                mock.patch.object(scan.os, "access", lambda p, m: True), mock.patch.object(scan, "sh", fake_sh):
+            out = "\n".join(scan.gitleaks(self.root))
+        self.assertIn("0 finding(s)", out)
+        out = self.run_fake_gitleaks(self.root, {}, code=124)
+        self.assertIn("timed out", out)
+        self.assertNotIn("127", out)
+
+    def test_c8_long_blob_is_fast(self) -> None:
+        import time
+        for blob in ("a" * 50_000, "token" * 10_000, "x-" * 25_000, "a+" * 25_000, "password_" * 6_000):
+            t = time.time()
+            scan.classify(blob)
+            scan.classify(blob, strict=True)
+            scan.dsn_classes(blob)
+            self.assertLess(time.time() - t, 2.0)
+
+    def test_c9_dump_cap_and_unreadable_config(self) -> None:
+        d = self.home / "db-backup"
+        d.mkdir()
+        for i in range(520):
+            (d / f"{i}.sql").write_text("x")
+        self.assertIn("500 dump file(s)", "\n".join(scan.dumps()))
+        locked = self.home / ".config" / "locked"
+        locked.mkdir()
+        locked.chmod(0)
+        self.addCleanup(locked.chmod, 0o700)
+        self.assertIsInstance(scan.home_files(), list)
+        self.assertNotIn("sudo -n", Path(scan.__file__).read_text())
 
     def test_main_refuses_a_non_repository(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
