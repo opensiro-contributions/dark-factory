@@ -34,8 +34,6 @@ description: >
      for you") in plain language and the review remarks accepted as known consequences;
    - `## Open questions` — what is left (undone slices, review blockers), each follow-up as a bd task with its id;
      "none" if nothing is.
-   When the product-owner's impact block exists for the change, put "What changes for the user" first under `## Done`
-   (as a `###` heading) and "Holes found -> decided" under `## Decisions`, so the owner can object to a wrong decision.
    The description goes to the PR (`gh pr edit --body-file -`, or the run returns it); it is not a file and is not
    committed.
 5. **Commit** the documents, `tasks.md`, the pyramid baseline and the ADR as their own commit on the branch, with the message rules of
