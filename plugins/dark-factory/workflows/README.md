@@ -14,9 +14,9 @@ Launch the pipeline only when you are leaving it to run alone.
 
 | File | Registered as | Role |
 |---|---|---|
-| `feature-auto.js` | `dark-factory:feature-auto` | entry point: branch + worktree → the path (`path` from the approved size; triage only when none is given; small → `feature-lite`) → plan → overlap check → size gate / split → critic → bd subtasks → `feature-core` → integrate (merge the base, full gates, project documents, the PR description). Stops before the PR |
+| `feature-auto.js` | `dark-factory:feature-auto` | entry point: branch + worktree → the path (`path` from the approved size; triage only when none is given; small → `feature-lite`) → impact (product owner) → plan → overlap check → size gate / split → critic → bd subtasks → `feature-core` → integrate (merge the base, full gates, project documents, the PR description). Stops before the PR |
 | `feature-core.js` | `dark-factory:feature-core` | the run's bd subtask graph, built in one of two modes (below), then review lenses and fix |
-| `feature-lite.js` | `dark-factory:feature-lite` | the small path: one build agent (TDD + full gates + commit), one reviewer, a fix agent when needed, one wrap-up agent (bd note, project documents, the PR description) |
+| `feature-lite.js` | `dark-factory:feature-lite` | the small path: an impact step (product owner), one build agent (TDD + full gates + commit), one reviewer, a fix agent when needed, one wrap-up agent (bd note, project documents, the PR description) |
 | `dryrun.mjs` | — (not loaded: the plugin loads `*.js` only) | stub run with fake agents — control flow without spending tokens |
 
 ## Roles
@@ -46,7 +46,7 @@ plugins), tens of thousands of tokens before any work, so the number of agents i
 | | `pipeline` | `session` (default) |
 |---|---|---|
 | The run | each stage by its own agents: repo root, branch, sizing, plan, critic, overlap check, bridge, build waves, integration, review lenses, fix, wrap-up; a small task goes to `feature-lite` | ONE `builder` does the whole task by the stage skills — branch, `plan`, `build-tdd` and `integrate` per slice, the full gate, `wrap` — then one `reviewer`; a `fix` agent only for critical or major findings |
-| Agents | 5–6 for a small task (`feature-lite`: build, review, a fix when needed, wrap), about 30 for an 8-subtask phase | 2, or 3 with a fix (plus `pr` when `stopBeforePR` is false) |
+| Agents | 6–7 for a small task (`feature-lite`: impact, build, review, a fix when needed, wrap), about 30 for an 8-subtask phase | 3, or 4 with a fix (impact, build, review; plus `pr` when `stopBeforePR` is false) |
 | Fits | a wide phase of independent slices, where parallel wall time matters | most tasks: one writer sees every earlier decision |
 
 Session mode has no split of a too-wide phase, no plan critic and no overlap check with other branches: those are
@@ -90,7 +90,7 @@ than in base's `app/` — add `"appSubdir": ""`. Nesting is one level — `featu
 that keeps its own edited copy passes `coreScript` / `liteScript` (absolute paths inside the session tree).
 
 **Cost cap.** `maxAgents` limits the agent calls of a whole run, children included (defaults: `feature-auto` 40,
-`feature-core` 30, `feature-lite` 5). A token target (`budget.total`) exists only when a human typed one ("+500k"), so
+`feature-core` 30, `feature-lite` 6). A token target (`budget.total`) exists only when a human typed one ("+500k"), so
 an unattended or scheduled run is bounded by `maxAgents` alone. Each stage checks the headroom it needs before it
 starts; when it is short, the run stops cleanly with `error: 'agent limit reached'` (or `'budget exhausted'` for a
 token target) and `stage`. Every result carries `agentsUsed` and `maxAgents`.

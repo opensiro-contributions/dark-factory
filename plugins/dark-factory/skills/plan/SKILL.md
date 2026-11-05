@@ -21,7 +21,7 @@ up and a dead path passes every test.
 
 1. **Read** `CLAUDE.md`, `CODING_STANDARDS.md` and the source: the OpenSpec change (`proposal.md` with its WHEN/THEN
    scenarios, `design.md` when present, the phase in `tasks.md`), the spec, or the bd task.
-   For a user-visible change, get the `product-owner` role's impact block first (what changes for the user; holes in the
+   For a user-visible change, get the `product-owner` role's impact block first (unless the run's prompt already carries it or says there is none) (what changes for the user; holes in the
    source, each decided with a WHEN/THEN scenario; it never asks the owner) and make each scenario part of the
    acceptance of the slice that closes it.
 2. **Read the actual code** the phase touches: repositories, services, dispatchers, settings, scheduled jobs,

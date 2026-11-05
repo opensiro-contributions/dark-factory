@@ -1,7 +1,7 @@
 export const meta = {
   name: 'feature-lite',
   description:
-    'SMALL PATH of the feature pipeline: a self-contained feature end to end with 3 agents (a 4th only to fix review findings), no openspec graph and no fan-out. (1) Build — one agent: branch <type>/<ID>-<slug> with a tracker ID, <type>/<slug> without one, from a fresh base branch + implementation from a ready spec by TDD + FULL gates (fast pytest suite + ruff) + commit. (2) Review — one reviewer, all lenses; a fix agent only for critical or major findings. (3) Wrap — one agent: bd tracing + project document sync + the PR description. (4) PR — optional (push + gh pr create; merged afterwards via scripts/merge-feature.sh <branch>). One repository: code (<appSubdir>/src, <appSubdir>/tests; appSubdir defaults to app) and harness (openspec/) in one tree; the bd store lives in the main checkout, outside git.',
+    'SMALL PATH of the feature pipeline: a self-contained feature end to end with 4 agents (a 5th only to fix review findings), no openspec graph and no fan-out. (0) Impact — the product-owner role writes what changes for the user and the holes it decided (skipped when the caller passes it). (1) Build — one agent: branch <type>/<ID>-<slug> with a tracker ID, <type>/<slug> without one, from a fresh base branch + implementation from a ready spec by TDD + FULL gates (fast pytest suite + ruff) + commit. (2) Review — one reviewer, all lenses; a fix agent only for critical or major findings. (3) Wrap — one agent: bd tracing + project document sync + the PR description. (4) PR — optional (push + gh pr create; merged afterwards via scripts/merge-feature.sh <branch>). One repository: code (<appSubdir>/src, <appSubdir>/tests; appSubdir defaults to app) and harness (openspec/) in one tree; the bd store lives in the main checkout, outside git.',
   phases: [{ title: 'Build' }, { title: 'Review' }, { title: 'Wrap' }, { title: 'PR' }],
 }
 
@@ -221,9 +221,11 @@ const impactClean = (r) => {
   return userChanges.length || holes.length ? { userChanges, holes } : null
 }
 // For the build and plan prompts: the scenarios to cover.
-const impactForBuild = (im) =>
+const impactForBuild = (im, chunk) =>
   im && im.holes.length
-    ? 'ACCEPTANCE SCENARIOS from the product owner (decisions on holes in the source; each becomes acceptance and is covered by a test): ' + im.holes.map((h, i) => `${i + 1}) ${h.hole} -> ${h.decision}. ${h.scenario}`).join(' ')
+    ? (chunk
+        ? 'ACCEPTANCE SCENARIOS from the product owner for the whole phase. This run is one chunk of a split phase: cover only the scenarios that belong to this chunk\'s task; the others belong to other chunks. Each of yours becomes acceptance and is covered by a test: '
+        : 'ACCEPTANCE SCENARIOS from the product owner (decisions on holes in the source; each becomes acceptance and is covered by a test): ') + im.holes.map((h, i) => `${i + 1}) ${h.hole} -> ${h.decision}. ${h.scenario}`).join(' ')
     : ''
 // For the PR description (wrap, integrate, session build).
 const impactForPr = (im) =>
@@ -239,7 +241,9 @@ let IMPACT = a.impact === undefined ? null : impactClean(a.impact)
 phase('Build')
 const stopBuild = stopBefore('Build')
 if (stopBuild) return stopBuild
-if (a.impact === undefined && !budgetSpent() && agentsUsed + 1 < MAX_AGENTS) {
+if (a.impact === undefined && (budgetSpent() || agentsUsed + 4 > MAX_AGENTS)) {
+  log('feature-lite: impact step skipped (budget, or too few agents left for impact, build, review and wrap) — continuing without it')
+} else if (a.impact === undefined) {
   try {
     IMPACT = impactClean(await spawn(impactPrompt(REQUEST, SPEC_PATH ? `the ready spec ${SPEC_PATH}` : `the request itself${BD_ID ? ` and bd task ${BD_ID}` : ''}`), { label: 'impact', phase: 'Build', schema: IMPACT_SCHEMA, agentType: PROJECT_ROLES.includes('product-owner') ? 'product-owner' : 'dark-factory:product-owner' }))
   } catch (e) {
@@ -254,7 +258,7 @@ const build = await spawn(
       ? `The feature spec is READY and is a PRECONDITION (written by a human BEFORE the run). Read it by the ABSOLUTE path ${SPEC_PATH}. Your job is IMPLEMENTATION strictly per the spec, by TDD (code+tests). Do NOT rewrite and do NOT commit the spec. Forks not covered by the spec → KISS/YAGNI, record them in assumptions[]. If there is NO file at the spec path — do NOT invent a design: return ok:false (the task is not ready for implementation).`
       : 'Implement the feature ENTIRELY on your own, by TDD, like an experienced developer: a short brainstorm-lite on safe defaults (forks → KISS/YAGNI, record them in assumptions[]), then code+tests.',
     TOPO(APP || '${DIR}'),
-    impactForBuild(IMPACT),
+    impactForBuild(IMPACT, SKIP_WRAP),
     `Request: "${REQUEST}".${BD_ID ? ` bd task: ${BD_ID}.` : ''}`,
     BRANCH_READY
       ? `STEP 0 — branch ${BRANCH} has ALREADY been created by the caller in tree ${APP || '${DIR}'}: make sure \`git -C ${APP || '${DIR}'} rev-parse --abbrev-ref HEAD\` = ${BRANCH} and the tree is clean. Do not branch again.`
