@@ -1,0 +1,386 @@
+{
+ "collected_at": "2026-11-09T05:33:17Z",
+ "factory": {
+  "releases": {
+   "v1": "2026-10-22",
+   "v10": "2026-10-26",
+   "v11": "2026-10-26",
+   "v12": "2026-10-27",
+   "v13": "2026-10-27",
+   "v14": "2026-10-27",
+   "v15": "2026-10-27",
+   "v16": "2026-10-29",
+   "v17": "2026-11-02",
+   "v18": "2026-11-05",
+   "v2": "2026-10-22",
+   "v3": "2026-10-22",
+   "v4": "2026-10-23",
+   "v5": "2026-10-23",
+   "v6": "2026-10-23",
+   "v7": "2026-10-23",
+   "v8": "2026-10-23",
+   "v9": "2026-10-23"
+  },
+  "server": {
+   "analytics": "2026-10-26",
+   "fleet_watch": "2026-10-26",
+   "janitor": "2026-10-26"
+  }
+ },
+ "final": false,
+ "projects": {
+  "A": {
+   "ci": {
+    "minutes": 0.0,
+    "runs": 0
+   },
+   "delivery": {
+    "lines": {
+     "backend": 0,
+     "frontend": 0,
+     "other": 0,
+     "tests": 0
+    },
+    "merged": 0
+   },
+   "first_week": "2026-W39",
+   "friction": {
+    "interrupts": 0,
+    "prompts": 0,
+    "rejected": 0,
+    "swear": 0
+   },
+   "involvement": {
+    "lengths": []
+   },
+   "parts": {
+    "base": "2026-06-28",
+    "fences": "2026-10-23",
+    "pipeline": "2026-10-23",
+    "release_tag": "2026-10-21"
+   },
+   "pins": [
+    [
+     "2026-10-23",
+     "v4"
+    ],
+    [
+     "2026-10-23",
+     "v5"
+    ],
+    [
+     "2026-10-23",
+     "v7"
+    ],
+    [
+     "2026-10-23",
+     "v8"
+    ],
+    [
+     "2026-10-26",
+     "v11"
+    ],
+    [
+     "2026-10-27",
+     "v12"
+    ],
+    [
+     "2026-10-27",
+     "v14"
+    ],
+    [
+     "2026-10-27",
+     "v15"
+    ],
+    [
+     "2026-11-02",
+     "v17"
+    ],
+    [
+     "2026-11-05",
+     "v18"
+    ]
+   ],
+   "prs": [],
+   "split": {
+    "direct": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "helpers": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "pipeline": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tests": {
+    "calls": 0,
+    "tokens": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tokens": {},
+   "turns": {},
+   "unattributed": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+   }
+  },
+  "B": {
+   "ci": {
+    "minutes": 0.0,
+    "runs": 0
+   },
+   "delivery": {
+    "lines": {
+     "backend": 0,
+     "frontend": 0,
+     "other": 0,
+     "tests": 0
+    },
+    "merged": 0
+   },
+   "first_week": "2026-W39",
+   "friction": {
+    "interrupts": 0,
+    "prompts": 0,
+    "rejected": 0,
+    "swear": 0
+   },
+   "involvement": {
+    "lengths": []
+   },
+   "parts": {
+    "base": "2026-04-13",
+    "fences": "2026-10-22",
+    "monitor": "2026-10-21",
+    "on_call": "2026-10-07",
+    "pipeline": "2026-10-23",
+    "release_tag": "2026-10-02"
+   },
+   "pins": [
+    [
+     "2026-10-22",
+     "v2"
+    ],
+    [
+     "2026-10-22",
+     "v3"
+    ],
+    [
+     "2026-10-23",
+     "v4"
+    ],
+    [
+     "2026-10-23",
+     "v5"
+    ],
+    [
+     "2026-10-23",
+     "v7"
+    ],
+    [
+     "2026-10-23",
+     "v8"
+    ],
+    [
+     "2026-10-26",
+     "v11"
+    ],
+    [
+     "2026-10-27",
+     "v12"
+    ],
+    [
+     "2026-10-27",
+     "v14"
+    ],
+    [
+     "2026-10-27",
+     "v15"
+    ],
+    [
+     "2026-11-02",
+     "v17"
+    ],
+    [
+     "2026-11-05",
+     "v18"
+    ]
+   ],
+   "prs": [],
+   "split": {
+    "direct": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "helpers": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "pipeline": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tests": {
+    "calls": 0,
+    "tokens": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tokens": {},
+   "turns": {},
+   "unattributed": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+   }
+  },
+  "C": {
+   "ci": {
+    "minutes": 0.0,
+    "runs": 0
+   },
+   "delivery": {
+    "lines": {
+     "backend": 0,
+     "frontend": 0,
+     "other": 0,
+     "tests": 0
+    },
+    "merged": 0
+   },
+   "first_week": "2026-W42",
+   "friction": {
+    "interrupts": 0,
+    "prompts": 0,
+    "rejected": 0,
+    "swear": 0
+   },
+   "involvement": {
+    "lengths": []
+   },
+   "parts": {
+    "base": "2026-10-15",
+    "fences": "2026-10-22",
+    "on_call": "2026-10-16",
+    "pipeline": "2026-10-27",
+    "release_tag": "2026-10-22"
+   },
+   "pins": [
+    [
+     "2026-10-22",
+     "v2"
+    ],
+    [
+     "2026-10-22",
+     "v3"
+    ],
+    [
+     "2026-10-23",
+     "v4"
+    ],
+    [
+     "2026-10-23",
+     "v5"
+    ],
+    [
+     "2026-10-23",
+     "v7"
+    ],
+    [
+     "2026-10-23",
+     "v8"
+    ],
+    [
+     "2026-10-26",
+     "v11"
+    ],
+    [
+     "2026-10-27",
+     "v12"
+    ],
+    [
+     "2026-10-27",
+     "v14"
+    ],
+    [
+     "2026-10-27",
+     "v15"
+    ],
+    [
+     "2026-11-02",
+     "v17"
+    ],
+    [
+     "2026-11-05",
+     "v18"
+    ]
+   ],
+   "prs": [],
+   "split": {
+    "direct": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "helpers": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    },
+    "pipeline": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tests": {
+    "calls": 0,
+    "tokens": {
+     "cache_read": 0,
+     "cache_write": 0,
+     "input": 0,
+     "output": 0
+    }
+   },
+   "tokens": {},
+   "turns": {},
+   "unattributed": {
+    "cache_read": 0,
+    "cache_write": 0,
+    "input": 0,
+    "output": 0
+   }
+  }
+ },
+ "week": "2026-W46"
+}
