@@ -63,6 +63,9 @@ find . -name '*.sh' -not -path './node_modules/*' -print0 | xargs -0 -n1 bash -n
 
 # feature pipeline workflows (in the plugin): control-flow dry runs with fake agents, no tokens spent (bare script
 # names); DRYRUN_EXPECT_ERROR makes a run fail unless its error matches — null, a spent budget, the agent cap
+# Pure first-party S2 file-scope guard (does not run or simulate agents)
+node --test tests/test_feature_core_disjointness.mjs
+
 AUTO='{"request":"x","stamp":"s1","bdId":"proj-x","path":"full","allowMigrations":true'
 DRYRUN_EXPECT_ERROR=null node plugins/dark-factory/workflows/dryrun.mjs feature-auto.js "$AUTO}"
 DRYRUN_EXPECT_ERROR=null node plugins/dark-factory/workflows/dryrun.mjs feature-lite.js '{"request":"x","stamp":"s1","bdId":"proj-x"}'

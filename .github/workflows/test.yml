@@ -27,6 +27,9 @@ jobs:
       - name: Tool versions
         run: python3 --version && node --version && git --version && jq --version
 
+      - name: Feature pipeline S2 file-scope collision guard (no agents)
+        run: node --test tests/test_feature_core_disjointness.mjs
+
       # git operations in the suites commit to temporary repositories
       - name: Git identity for test repositories
         run: |

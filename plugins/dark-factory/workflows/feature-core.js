@@ -216,9 +216,23 @@ const MSG_STYLE = 'Commit messages by the integrate skill. No Co-Authored-By.'
 function pairwiseDisjoint(sets) {
   const seen = new Set()
   for (const s of sets) {
-    for (const f of s || []) {
-      if (seen.has(f)) return false
-      seen.add(f)
+    // Unknown scope is not evidence of disjoint writes.
+    if (!Array.isArray(s) || s.length === 0) return false
+    for (const f of s) {
+      if (typeof f !== 'string' || !f.trim()) return false
+      const path = f.replace(/\\/g, '/')
+      if (path.startsWith('/') || /^[A-Za-z]:/.test(path) || /[*?{}]/.test(path)) return false
+      const parts = []
+      for (const part of path.split('/')) {
+        if (!part || part === '.') continue
+        if (part === '..') {
+          if (parts.length === 0) return false
+          parts.pop()
+        } else parts.push(part)
+      }
+      const key = parts.join('/')
+      if (!key || seen.has(key)) return false
+      seen.add(key)
     }
   }
   return true
